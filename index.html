@@ -1,0 +1,1123 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta
+			name="description"
+			content="A hands-on HackYourFuture workshop introducing JavaScript with Node.js."
+		/>
+		<title>Intro to JavaScript Week 1 · HackYourFuture</title>
+		<style>
+			:root {
+				color-scheme: dark;
+				--canvas: #0b1020;
+				--surface: #131a2d;
+				--raised: #1c2740;
+				--border: #30405e;
+				--text: #f3f7ff;
+				--muted: #a6b2ca;
+				--yellow: #f7df1e;
+				--cyan: #67e8f9;
+				--green: #72f1b8;
+				--orange: #ffb86c;
+				--red: #ff6b7a;
+				--mono: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+				--sans: 'Trebuchet MS', 'Aptos', sans-serif;
+				--space: clamp(1rem, 2.5vw, 2.5rem);
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			.page {
+				min-height: 100vh;
+				margin: 0;
+				overflow: hidden;
+				background:
+					linear-gradient(#f7df1e0a 0.0625rem, transparent 0.0625rem),
+					linear-gradient(90deg, #f7df1e0a 0.0625rem, transparent 0.0625rem),
+					radial-gradient(circle at 82% 12%, #f7df1e20, transparent 24rem),
+					var(--canvas);
+				background-size: 2.5rem 2.5rem, 2.5rem 2.5rem, auto, auto;
+				color: var(--text);
+				font-family: var(--sans);
+				font-size: 2rem;
+			}
+
+			.skip {
+				position: fixed;
+				inset: 0 auto auto 0;
+				z-index: 30;
+				padding: 0.75rem 1rem;
+				transform: translateY(-120%);
+				background: var(--yellow);
+				color: #111522;
+				font-weight: 700;
+			}
+
+			.skip:focus {
+				transform: none;
+			}
+
+			.shell {
+				min-height: 100vh;
+				display: grid;
+				grid-template-rows: auto 1fr;
+				grid-template-columns: minmax(0, 1fr);
+			}
+
+			.shell--content {
+				grid-template-rows: 1fr;
+			}
+
+			.shell--content .topbar,
+			.shell .controls {
+				display: none;
+			}
+
+			.topbar {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				min-height: 4rem;
+				padding: 0 1.4rem;
+				border-bottom: 0.0625rem solid var(--border);
+				background: #080d19e8;
+				backdrop-filter: blur(0.8rem);
+			}
+
+			.mark {
+				display: grid;
+				place-items: center;
+				width: 2.4rem;
+				height: 2.4rem;
+				background: var(--yellow);
+				color: #111522;
+				font: 900 2rem var(--mono);
+			}
+
+			.repo {
+				overflow: hidden;
+				color: var(--muted);
+				font: 1.8rem var(--mono);
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.repo__owner,
+			.accent {
+				color: var(--yellow);
+			}
+
+			.topbar__spacer {
+				flex: 1;
+			}
+
+			.badge {
+				padding: 0.3rem 0.65rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 99rem;
+				color: var(--muted);
+				font: 1.5rem var(--mono);
+			}
+
+			.deck {
+				position: relative;
+				min-height: 0;
+			}
+
+			.slide {
+				position: absolute;
+				inset: 0;
+				display: none;
+				align-content: safe center;
+				grid-template-columns: minmax(0, 1fr);
+				overflow: auto;
+				padding: clamp(1rem, 2.5vh, 2.5rem) 5vw;
+			}
+
+			.slide--active {
+				display: grid;
+				animation: reveal 220ms ease-out;
+			}
+
+			.slide--center {
+				justify-items: center;
+				text-align: center;
+			}
+
+			.slide__inner {
+				width: 100%;
+				min-width: 0;
+				overflow-wrap: anywhere;
+				margin-inline: auto;
+			}
+
+			.slide__title {
+				text-align: center;
+				margin: 0 0 1.35rem;
+				font-size: clamp(4.4rem, 10.8vw, 11.6rem);
+				line-height: 0.98;
+				letter-spacing: -0.045em;
+			}
+
+			.slide__title--welcome {
+				font-size: clamp(4.125rem, 10.125vw, 10.875rem);
+			}
+
+			.slide__language {
+				font-size: 156.25%;
+			}
+
+			.slide__tagline {
+				color: #fff;
+				font-size: 67.5%;
+			}
+
+			.slide__title--medium {
+				font-size: clamp(3.8rem, 8vw, 8.2rem);
+			}
+
+			.slide__title--declaration {
+				font-size: clamp(3.135rem, 6.6vw, 6.765rem);
+			}
+
+			.slide__lead {
+				max-width: 100%;
+				margin: 0;
+				color: var(--muted);
+				font-size: clamp(2.1rem, 4vw, 3.1rem);
+				line-height: 1.5;
+			}
+
+			.slide__lead--center {
+				margin-inline: auto;
+			}
+
+			.slide__list {
+				display: grid;
+				gap: 0.7rem;
+				margin: 1.4rem 0 0;
+				padding-left: 1.5rem;
+				font-size: clamp(2rem, 3.4vw, 2.6rem);
+				line-height: 1.45;
+			}
+
+			.slide__list--center {
+				width: fit-content;
+				max-width: 100%;
+				margin-inline: auto;
+				text-align: left;
+			}
+
+			.slide__list--compact {
+				gap: 0.4rem;
+				font-size: clamp(1.8rem, 2.6vw, 2.16rem);
+			}
+
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: var(--space);
+				margin-top: 1.5rem;
+			}
+
+			.grid--three {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+
+			.grid--steps {
+				grid-template-columns: 1fr auto 1fr auto 1fr;
+				gap: calc(var(--space) / 2);
+			}
+
+			.connector {
+				align-self: center;
+				justify-self: center;
+				color: var(--yellow);
+				font: 900 2rem var(--mono);
+				line-height: 1;
+			}
+
+			@media (max-width: 48rem) {
+				.connector {
+					transform: rotate(90deg);
+				}
+			}
+
+			.card {
+				min-width: 0;
+				padding: 1.3rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.8rem;
+				background: linear-gradient(145deg, #18223aee, #10172aee);
+				box-shadow: 0 1.2rem 3rem #0005;
+			}
+
+			.card--exercise {
+				border-left: 0.32rem solid var(--green);
+			}
+
+			.card--warning {
+				border-left: 0.32rem solid var(--orange);
+			}
+
+			.card__label {
+				margin: 0 0 0.55rem;
+				color: var(--cyan);
+				font: 800 1.52rem var(--mono);
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+			}
+
+			.card__title {
+				margin: 0 0 0.5rem;
+				font-size: clamp(2.2rem, 3.6vw, 2.9rem);
+			}
+
+			.card__copy {
+				margin: 0;
+				color: var(--muted);
+				font-size: clamp(1.8rem, 2.7vw, 2.16rem);
+				line-height: 1.45;
+			}
+
+			.code {
+				overflow: auto;
+				margin: 1.5rem 0 0;
+				padding: 1.25rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.7rem;
+				background: #050914;
+				color: #e6edf7;
+				font: clamp(1.56rem, 2.6vw, 2.06rem)/1.6 var(--mono);
+				tab-size: 2;
+				white-space: pre-wrap;
+			}
+
+			.code--compact {
+				font-size: clamp(1.4rem, 2vw, 1.8rem);
+				white-space: pre;
+			}
+
+			.code__command {
+				color: var(--green);
+			}
+
+			.code__keyword {
+				color: #ff79c6;
+			}
+
+			.code__string {
+				color: var(--yellow);
+			}
+
+			.code__greeting {
+				color: #fff;
+			}
+
+			.code__number {
+				color: var(--cyan);
+			}
+
+			.code__comment {
+				color: #7f8ca8;
+			}
+
+			.term {
+				color: var(--cyan);
+				font-family: var(--mono);
+			}
+
+			.timeline {
+				display: grid;
+				gap: 0.5rem;
+				margin-top: 1.5rem;
+			}
+
+			.timeline__row {
+				display: grid;
+				grid-template-columns: max-content minmax(0, 1fr) auto;
+				gap: 1rem;
+				align-items: center;
+				padding: 0.75rem 1rem;
+				border-left: 0.22rem solid var(--yellow);
+				background: var(--surface);
+			}
+
+			.timeline__time {
+				color: var(--yellow);
+				font: 800 1.8rem var(--mono);
+			}
+
+			.timeline__duration {
+				color: var(--muted);
+				font: 1.6rem var(--mono);
+			}
+
+			.flow {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 0.8rem;
+				align-items: center;
+				margin-top: 1.5rem;
+			}
+
+			.flow__step {
+				padding: 1.2rem;
+				border: 0.0625rem solid var(--border);
+				background: var(--surface);
+				text-align: center;
+			}
+
+			.flow__arrow {
+				display: none;
+				color: var(--yellow);
+				font: 900 3rem var(--mono);
+			}
+
+			.controls {
+				display: grid;
+				grid-template-columns: 1fr auto 1fr;
+				align-items: center;
+				gap: 1rem;
+				min-height: 4.2rem;
+				padding: 0.65rem 1.2rem;
+				border-top: 0.0625rem solid var(--border);
+				background: #080d19f2;
+			}
+
+			.controls__group {
+				display: flex;
+				gap: 0.5rem;
+			}
+
+			.controls__group--end {
+				justify-content: flex-end;
+			}
+
+			.button {
+				min-width: 2.7rem;
+				min-height: 2.4rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.45rem;
+				background: var(--raised);
+				color: var(--text);
+				font: 800 1.68rem var(--mono);
+				cursor: pointer;
+			}
+
+			.button:hover {
+				border-color: var(--yellow);
+			}
+
+			.button:focus-visible {
+				outline: 0.2rem solid var(--yellow);
+				outline-offset: 0.15rem;
+			}
+
+			.button:disabled {
+				cursor: not-allowed;
+				opacity: 0.45;
+			}
+
+			.counter {
+				color: var(--muted);
+				font: 1.68rem var(--mono);
+				text-align: center;
+			}
+
+			.progress {
+				position: fixed;
+				inset: auto 0 0;
+				z-index: 10;
+				height: 0.18rem;
+			}
+
+			.progress__bar {
+				display: block;
+				width: 0;
+				height: 100%;
+				background: linear-gradient(90deg, var(--yellow), var(--cyan));
+				transition: width 180ms ease;
+			}
+
+			.dialog {
+				width: min(44rem, calc(100% - 2rem));
+				max-height: 80vh;
+				padding: 0;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.8rem;
+				background: var(--surface);
+				color: var(--text);
+				box-shadow: 0 2rem 5rem #000b;
+			}
+
+			.dialog::backdrop {
+				background: #050914d9;
+				backdrop-filter: blur(0.35rem);
+			}
+
+			.dialog__header {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				padding: 1rem 1.2rem;
+				border-bottom: 0.0625rem solid var(--border);
+			}
+
+			.dialog__title {
+				flex: 1;
+				margin: 0;
+				font-size: 2rem;
+			}
+
+			.dialog__body {
+				padding: 1.2rem;
+				color: var(--muted);
+				font-size: 2.1rem;
+				line-height: 1.6;
+				white-space: pre-line;
+			}
+
+			@keyframes reveal {
+				from {
+					opacity: 0;
+					transform: translateY(0.7rem);
+				}
+			}
+
+			@media (max-width: 48rem) {
+				.grid,
+				.grid--three,
+				.flow {
+					grid-template-columns: 1fr;
+				}
+
+				.slide {
+					align-content: start;
+					padding: 2rem 5vw;
+				}
+
+				.badge,
+				.timeline__duration,
+				.controls__group--end {
+					display: none;
+				}
+
+				.timeline__row {
+					grid-template-columns: max-content minmax(0, 1fr);
+				}
+
+				.controls {
+					grid-template-columns: 1fr auto;
+				}
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				.slide--active {
+					animation: none;
+				}
+
+				.progress__bar {
+					transition: none;
+				}
+			}
+
+			@media print {
+				.page {
+					overflow: visible;
+					background: white;
+					color: black;
+				}
+
+				.topbar,
+				.controls,
+				.progress {
+					display: none;
+				}
+
+				.deck {
+					display: block;
+				}
+
+				.slide {
+					position: relative;
+					display: grid;
+					min-height: 100vh;
+					page-break-after: always;
+					color: black;
+				}
+			}
+		</style>
+	</head>
+	<body class="page">
+		<a class="skip" href="#deck">Skip to presentation</a>
+		<div class="shell">
+			<header class="topbar">
+				<span class="mark" aria-hidden="true">JS</span>
+				<span class="repo"><span class="repo__owner">hackyourfuture</span> / intro-javascript-week1</span>
+				<span class="topbar__spacer"></span>
+				<span class="badge">● Node.js workshop</span>
+				<span class="badge">Week 1</span>
+			</header>
+
+			<main class="deck" id="deck" aria-live="polite">
+				<section class="slide slide--center slide--active" data-topic="welcome" data-notes="Welcome trainees and explain that today every example will run with Node.js in the VS Code terminal.">
+					<div class="slide__inner">
+						
+						<h1 class="slide__title slide__title--welcome"><span class="slide__language"><span class="accent">J</span>ava<span class="accent">S</span>cript</span><br /><span class="slide__tagline">makes decisions computable.</span></h1>
+						
+					</div>
+				</section>
+
+				<section class="slide" data-topic="workshop-rules" data-notes="Invite questions and ask everyone to type the examples instead of copying them blindly.">
+					<div class="slide__inner">
+						
+						<h2 class="slide__title slide__title--medium">Predict. Run. Explain.</h2>
+						<div class="grid grid--steps">
+							<article class="card"><p class="card__copy">Say what you expect before executing the program.</p></article>
+							<span class="connector" aria-hidden="true">→</span>
+							<article class="card"><p class="card__copy">Use Node.js and read every line printed in the terminal.</p></article>
+							<span class="connector" aria-hidden="true">→</span>
+							<article class="card"><p class="card__copy">Describe the result to a neighbour in your own words.</p></article>
+						</div>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="learning-goals">
+					<div class="slide__inner">
+						
+						<h2 class="slide__title slide__title--medium">Learning goals</h2>
+						<ul class="slide__list slide__list--center">
+							<li>run a JavaScript file with Node.js</li>
+							<li>store and inspect values using clear variable names</li>
+							<li>work with strings, numbers, booleans, and arrays</li>
+							<li>compare values and calculate results with operators</li>
+							<li>read an error message and locate the responsible line</li>
+						</ul>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="agenda">
+					<div class="slide__inner">
+						
+						<h2 class="slide__title slide__title--medium">Workshop agenda</h2>
+						<div class="timeline">
+							<div class="timeline__row"><span class="timeline__time">12:15</span><span><span class="accent">J</span>ava<span class="accent">S</span>cript + Node.js setup</span></div>
+							<div class="timeline__row"><span class="timeline__time">12:45</span><span>Variables + value types</span></div>
+							<div class="timeline__row"><span class="timeline__time">14:00</span><span>Break</span></div>
+							<div class="timeline__row"><span class="timeline__time">14:30</span><span>Comparisons + arithmetic</span></div>
+							<div class="timeline__row"><span class="timeline__time">15:20</span><span>Errors + pizza project</span></div>
+						</div>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="part-node">
+					<div class="slide__inner"><h2 class="slide__title">What is Node.js?</h2><p class="slide__lead slide__lead--center"><span class="accent">JavaScript</span> is the language.<br />Node.js is one place where it can run.</p></div>
+				</section>
+
+				<section class="slide" data-topic="install-node">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Install Node.js</h2>
+						<p class="slide__lead">Open <a class="accent" href="https://nodejs.org/en/download" target="_blank" rel="noopener noreferrer">nodejs.org/en/download</a> and choose <span class="accent">LTS</span>.</p>
+
+						<div class="grid">
+							<article class="card">
+								<h3 class="card__title">macOS</h3>
+								<ol class="slide__list slide__list--compact">
+									<li>Select macOS and download the <span class="accent">.pkg</span> installer.</li>
+									<li>Open it and follow the installation steps.</li>
+									<li>Approve the installation when prompted.</li>
+								</ol>
+							</article>
+
+							<article class="card">
+								<h3 class="card__title">Windows</h3>
+								<ol class="slide__list slide__list--compact">
+									<li>Select Windows and download the <span class="accent">.msi</span> installer for your PC.</li>
+									<li>Open it and keep the default options.</li>
+									<li>Click Install, then Finish.</li>
+								</ol>
+							</article>
+						</div>
+
+						
+					</div>
+				</section>
+
+				<section class="slide" data-topic="what-is-javascript">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Where <span class="accent">J</span>ava<span class="accent">S</span>cript runs</h2>
+						<div class="grid grid--three">
+							<article class="card"><p class="card__label">Web</p><p class="card__copy">Add behaviour and interaction to websites.</p></article>
+							<article class="card"><p class="card__label">Server</p><p class="card__copy">Build services and tools with Node.js.</p></article>
+							<article class="card"><p class="card__label">Everywhere else</p><p class="card__copy">Create desktop apps, command-line tools, and automation.</p></article>
+						</div>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="node-check" data-notes="If node is not recognized, pause and resolve installation before continuing.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Check your Node.js version</h2>
+						<pre class="code"><code><span class="code__command">node --version</span>
+v24.6.0</code></pre>
+						<p class="slide__lead">Your version may differ. A version number means the command is available.</p>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="first-file">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Your first program</h2>
+						<div class="grid">
+							<article class="card"><p class="card__label">File</p><pre class="code"><code>console.log(<span class="code__string">"Hello, JavaScript!"</span>);</code></pre></article>
+							<article class="card"><p class="card__label">Terminal</p><pre class="code"><code><span class="code__command">node hello.js</span>
+<span class="code__greeting">Hello, JavaScript!</span></code></pre></article>
+						</div>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="console-log">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Display values with <span class="accent">console.log()</span></h2>
+						<pre class="code"><code>console.log(<span class="code__string">"A message"</span>);
+console.log(<span class="code__number">42</span>);
+console.log(<span class="code__string">"Score:"</span>, <span class="code__number">42</span>);</code></pre>
+						<p class="slide__lead"><span class="accent">console.log()</span> displays values; it does not save them.</p>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="exercise-first-run">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: your first program</h2>
+						<article class="card card--exercise"><ol class="slide__list slide__list--compact"><li>In VS Code, create a folder named <span class="term">javascript-week1</span>.</li><li>Create <span class="term">hello.js</span> inside that folder.</li><li>Use <span class="accent">console.log()</span> to display your name and one reason you want to learn <span class="accent">J</span>ava<span class="accent">S</span>cript.</li><li>Run <span class="term">node hello.js</span>.</li></ol></article>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="part-variables">
+					<div class="slide__inner"><h2 class="slide__title">Variables</h2><p class="slide__lead slide__lead--center">A variable connects a useful name to a value.</p></div>
+				</section>
+
+				<section class="slide" data-topic="declaration-assignment">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--declaration">Declaration, assignment, use</h2>
+						<pre class="code"><code><span class="code__keyword">let</span> score;          <span class="code__comment">// declaration</span>
+score = <span class="code__number">10</span>;        <span class="code__comment">// assignment</span>
+console.log(score); <span class="code__comment">// use</span></code></pre>
+						<div class="flow"><div class="flow__step">Create a name</div><div class="flow__step">Store a value</div><div class="flow__step">Read the value</div></div>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="const-let-var">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium"><span class="accent">const</span>, let, and var</h2>
+						<div class="grid grid--three">
+							<article class="card"><p class="card__label">const</p><p class="card__copy">Default choice. The variable cannot be assigned another value.</p></article>
+							<article class="card"><p class="card__label">let</p><p class="card__copy">Use when the variable must receive a new value later.</p></article>
+							<article class="card card--warning"><p class="card__label">var</p><p class="card__copy">Older declaration style. Recognize it, but do not use it in new code.</p></article>
+						</div>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="const-let-example">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Naming variables</h2>
+						<pre class="code"><code><span class="code__keyword">const</span> courseName = <span class="code__string">"HackYourFuture"</span>;
+<span class="code__keyword">let</span> completedExercises = <span class="code__number">0</span>;
+
+completedExercises = <span class="code__number">1</span>;
+
+console.log(courseName);
+console.log(completedExercises);</code></pre>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="exercise-variables">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: variables</h2>
+						<article class="card card--exercise"><ul class="slide__list slide__list--compact"><li>Create a variable equal to <span class="term">24 * 55</span>.</li><li>Create a const equal to your name.</li><li>Use <span class="accent">console.log()</span> to display every result with a useful label.</li></ul></article>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="part-types">
+					<div class="slide__inner"><h2 class="slide__title">Value types</h2><p class="slide__lead slide__lead--center">The type determines what a value<br />represents and how it behaves.</p></div>
+				</section>
+
+				<section class="slide" data-topic="typeof">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Check types with <span class="accent">typeof</span></h2>
+						<pre class="code"><code>console.log(<span class="code__keyword">typeof</span> <span class="code__string">"Vadim"</span>);  <span class="code__comment">// "string"</span>
+console.log(<span class="code__keyword">typeof</span> <span class="code__number">37</span>);     <span class="code__comment">// "number"</span>
+console.log(<span class="code__keyword">typeof</span> <span class="code__keyword">true</span>);   <span class="code__comment">// "boolean"</span></code></pre>
+						<p class="slide__lead"><span class="term">typeof</span> produces a string describing the value’s type.</p>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="strings">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Working with strings</h2>
+						<pre class="code"><code><span class="code__keyword">const</span> name = <span class="code__string">"Vadim"</span>;
+
+console.log(name[<span class="code__number">0</span>]);          <span class="code__comment">// "V"</span>
+console.log(name.length);      <span class="code__comment">// 5</span>
+console.log(name.toLowerCase()); <span class="code__comment">// "vadim"</span></code></pre>
+						<p class="slide__lead">Indexes begin at <span class="term">0</span>, so the first character uses index 0.</p>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="booleans">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Booleans: true or false</h2>
+						<div class="grid">
+							<article class="card"><p class="card__label">Investigate</p><p class="card__copy">Find one real situation where software needs a yes/no value.</p></article>
+							<article class="card"><p class="card__label">Explain</p><pre class="code"><code><span class="code__keyword">const</span> isTakeaway = <span class="code__keyword">true</span>;
+console.log(<span class="code__keyword">typeof</span> isTakeaway);</code></pre></article>
+						</div>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="arrays">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Arrays</h2>
+						<pre class="code"><code><span class="code__keyword">const</span> shoppingList = [<span class="code__string">"eggs"</span>, <span class="code__string">"apples"</span>, <span class="code__string">"flour"</span>];
+
+console.log(shoppingList[<span class="code__number">0</span>]); <span class="code__comment">// "eggs"</span>
+console.log(shoppingList[<span class="code__number">2</span>]); <span class="code__comment">// "flour"</span>
+console.log(shoppingList[<span class="code__number">3</span>]); <span class="code__comment">// undefined: no item at this index</span></code></pre>
+						<p class="slide__lead">Array indexes start at <span class="term">0</span>, just like string indexes.</p>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="exercise-types">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: strings and arrays</h2>
+						<article class="card card--exercise"><ol class="slide__list slide__list--compact"><li>Use <span class="accent">console.log()</span> to display the first character of your name.</li><li>Create an array with three strings, three numbers, and three booleans.</li><li>Use <span class="accent">console.log()</span> to display the fourth item.</li><li>Use <span class="accent">console.log()</span> to display the type of that item.</li><li>Optional: use <span class="accent">console.log()</span> to display the final character in your name.</li></ol></article>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="part-comparisons">
+					<div class="slide__inner"><h2 class="slide__title">Compare values</h2><p class="slide__lead slide__lead--center">A comparison asks a question and produces a boolean.</p></div>
+				</section>
+
+				<section class="slide" data-topic="operators">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">What is an operator?</h2>
+						<p class="slide__lead">It is a symbol that performs an operation on values.</p>
+						<pre class="code"><code>console.log(<span class="code__number">10</span> + <span class="code__number">5</span>); <span class="code__comment">// 15</span></code></pre>
+						<p class="card__copy">Here, <span class="term">+</span> is the operator. It adds the values <span class="term">10</span> and <span class="term">5</span>.</p>
+						<ul class="slide__list slide__list--compact">
+							<li><span class="term">=</span> assign a value to a variable</li>
+							<li><span class="term">+</span> add &nbsp; <span class="term">-</span> subtract</li>
+							<li><span class="term">*</span> multiply &nbsp; <span class="term">/</span> divide</li>
+							<li><span class="term">%</span> find the remainder after division</li>
+						</ul>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="strict-equality">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Equality operators</h2>
+						<pre class="code"><code>console.log(<span class="code__number">7</span> == <span class="code__string">"7"</span>);   <span class="code__comment">// true: conversion occurs</span>
+console.log(<span class="code__number">7</span> === <span class="code__string">"7"</span>);  <span class="code__comment">// false: type differs</span>
+console.log(<span class="code__number">7</span> != <span class="code__string">"7"</span>);   <span class="code__comment">// false</span>
+console.log(<span class="code__number">7</span> !== <span class="code__string">"7"</span>);  <span class="code__comment">// true</span></code></pre>
+						<p class="slide__lead">Use <span class="term">===</span> and <span class="term">!==</span> so value and type must agree.</p>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="assignment-and-equality">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Assignment and equality</h2>
+						<ul class="slide__list">
+							<li><span class="term">=</span> assigns a value</li>
+							<li><span class="term">==</span> equals</li>
+							<li><span class="term">===</span> strictly equals</li>
+							<li><span class="term">!=</span> does not equal</li>
+							<li><span class="term">!==</span> strictly does not equal</li>
+						</ul>
+						<p class="slide__lead">Strict comparisons do not convert value types.</p>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="relational-operators">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Compare numbers</h2>
+						<pre class="code"><code>console.log(<span class="code__number">8</span> &gt; <span class="code__number">3</span>);   <span class="code__comment">// true</span>
+console.log(<span class="code__number">8</span> &gt;= <span class="code__number">8</span>);  <span class="code__comment">// true</span>
+console.log(<span class="code__number">3</span> &lt; <span class="code__number">8</span>);   <span class="code__comment">// true</span>
+console.log(<span class="code__number">3</span> &lt;= <span class="code__number">2</span>);  <span class="code__comment">// false</span></code></pre>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="exercise-comparisons">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: comparisons</h2>
+						<article class="card card--exercise"><pre class="code"><code>console.log(<span class="code__number">9</span> === <span class="code__string">"9"</span>);
+console.log(<span class="code__number">12</span> !== <span class="code__number">10</span>);
+console.log(<span class="code__number">5</span> &gt;= <span class="code__number">5</span>);
+console.log(<span class="code__string">"apple"</span> === <span class="code__string">"Apple"</span>);</code></pre></article>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="part-arithmetic">
+					<div class="slide__inner"><h2 class="slide__title">Arithmetic</h2><p class="slide__lead slide__lead--center">Operators combine values to produce a new value.</p></div>
+				</section>
+
+				<section class="slide" data-topic="arithmetic">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Arithmetic operators</h2>
+						<div class="grid">
+							<pre class="code"><code>console.log(<span class="code__number">10</span> + <span class="code__number">5</span>); <span class="code__comment">// 15</span>
+console.log(<span class="code__number">10</span> - <span class="code__number">5</span>); <span class="code__comment">// 5</span></code></pre>
+							<pre class="code"><code>console.log(<span class="code__number">10</span> * <span class="code__number">5</span>); <span class="code__comment">// 50</span>
+console.log(<span class="code__number">10</span> / <span class="code__number">5</span>); <span class="code__comment">// 2</span></code></pre>
+						</div>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="addition-strings">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Add numbers or join text?</h2>
+						<pre class="code"><code>console.log(<span class="code__number">2</span> + <span class="code__number">3</span>);          <span class="code__comment">// 5</span>
+console.log(<span class="code__string">"Hello, "</span> + <span class="code__string">"Vadim"</span>); <span class="code__comment">// "Hello, Vadim"</span>
+console.log(<span class="code__string">"Total: "</span> + <span class="code__number">5</span>); <span class="code__comment">// "Total: 5"</span></code></pre>
+						<p class="slide__lead">When either side is a string, <span class="term">+</span> joins text.</p>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="remainder">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">The remainder operator</h2>
+						<pre class="code"><code>console.log(<span class="code__number">21</span> / <span class="code__number">5</span>); <span class="code__comment">// 4.2</span>
+console.log(<span class="code__number">21</span> % <span class="code__number">5</span>); <span class="code__comment">// 1 remainder</span>
+console.log(<span class="code__number">8</span> % <span class="code__number">2</span>);  <span class="code__comment">// 0: evenly divisible</span></code></pre>
+						<p class="slide__lead">Investigate: how could remainder tell whether a number is even?</p>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="exercise-arithmetic">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Build a tiny receipt</h2>
+						<article class="card card--exercise"><ul class="slide__list slide__list--compact"><li>Store a product name, price, and quantity.</li><li>Calculate and store the total.</li><li>Use <span class="accent">console.log()</span> to display one readable receipt line.</li><li>Change the price and run the file again.</li><li>Use remainder to test one even and one odd number.</li></ul></article>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="part-errors">
+					<div class="slide__inner"><h2 class="slide__title"><span class="accent">J</span>ava<span class="accent">S</span>cript errors</h2><p class="slide__lead slide__lead--center">Read from the error type to the filename and line number.</p></div>
+				</section>
+
+				<section class="slide" data-topic="read-errors">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Reading error messages</h2>
+						<pre class="code"><code>ReferenceError: pizzaPrice is not defined
+    at Object.&lt;anonymous&gt; (pizza.js:4:20)</code></pre>
+						<ol class="slide__list"><li>Name the error: <span class="term">ReferenceError</span>.</li><li>Compare the variable spelling with its declaration.</li><li>Change one thing and run the file again.</li></ol>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="common-errors">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Common errors</h2>
+						<div class="grid grid--three">
+							<article class="card"><p class="card__label">SyntaxError</p><p class="card__copy"><span class="accent">J</span>ava<span class="accent">S</span>cript cannot understand the written structure. Check quotes, brackets, and punctuation.</p></article>
+							<article class="card"><p class="card__label">ReferenceError</p><p class="card__copy">A requested variable name cannot be found. Check declaration and spelling.</p></article>
+							<article class="card"><p class="card__label">Unexpected result</p><p class="card__copy">The program runs but the value is wrong. Use <span class="accent">console.log()</span> to display intermediate values and types.</p></article>
+						</div>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="exercise-fix-errors">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: fix the errors</h2>
+						<article class="card card--exercise"><pre class="code"><code><span class="code__keyword">const</span> name = <span class="code__string">"Benjamin"</span>;
+name = <span class="code__string">"Better Benjamin"</span>;
+
+<span class="code__keyword">const</span> pizzaPrice = <span class="code__number">78</span>;
+<span class="code__keyword">const</span> discountedPrice = pizzaprice - <span class="code__number">10</span>;
+
+<span class="code__keyword">const</span> users = [<span class="code__string">"Peter"</span>, <span class="code__string">"Johnny"</span>, <span class="code__string">"Borge"</span>];
+console.log(users[<span class="code__number">3</span>]);</code></pre></article>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="pizza-intro">
+					<div class="slide__inner"><h2 class="slide__title">Pizza project</h2><p class="slide__lead slide__lead--center">Combine variables, value types, arithmetic, and <span class="accent">console.log()</span> in <span class="term">pizza.js</span>.</p></div>
+				</section>
+
+				<section class="slide" data-topic="exercise-pizza-part-1">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Pizza order: part 1</h2>
+						<article class="card card--exercise"><ol class="slide__list slide__list--compact"><li>Create a folder named <span class="term">pizza-exercise</span>.</li><li>Create <span class="term">pizza.js</span> inside it.</li><li>Use <span class="accent">console.log()</span> to display <span class="term">I love pizza</span> and run the file with Node.js.</li><li>Store your favourite pizza name and its price in variables.</li><li>Use <span class="accent">console.log()</span> to display: <span class="term">New pizza order: [name]. The price of the pizza is: [price]</span>. Replace [name] and [price] with your stored values; do not print the square brackets.</li></ol></article>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="pizza-part-1-solution">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Part 1: solution</h2>
+						<pre class="code"><code>console.log(<span class="code__string">"I love pizza"</span>);
+
+<span class="code__keyword">const</span> pizzaName = <span class="code__string">"Margherita"</span>;
+<span class="code__keyword">const</span> pizzaPrice = <span class="code__number">85</span>;
+
+console.log(
+  <span class="code__string">"New pizza order: "</span> + pizzaName +
+  <span class="code__string">". The price of the pizza is: "</span> + pizzaPrice
+);</code></pre>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="exercise-pizza-part-2">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Pizza order: part 2</h2>
+						<article class="card card--exercise"><ol class="slide__list slide__list--compact"><li>Store the number of pizzas.</li><li>Store whether the order is takeaway.</li><li>Calculate <span class="term">totalPrice</span>.</li><li>Use <span class="accent">console.log()</span> to display the takeaway choice, quantity, pizza name, and total.</li><li>Change the unit price and verify the total changes correctly.</li></ol></article>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="pizza-part-2-solution">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Part 2: solution</h2>
+						<pre class="code code--compact"><code><span class="code__keyword">const</span> pizzaName = <span class="code__string">"Margherita"</span>;
+<span class="code__keyword">const</span> pizzaPrice = <span class="code__number">85</span>;
+<span class="code__keyword">const</span> pizzaAmount = <span class="code__number">3</span>;
+<span class="code__keyword">const</span> isTakeaway = <span class="code__keyword">true</span>;
+<span class="code__keyword">const</span> totalPrice = pizzaPrice * pizzaAmount;
+
+console.log(
+  <span class="code__string">"New pizza order (takeaway:"</span>, isTakeaway, <span class="code__string">"):"</span>, pizzaAmount, pizzaName,
+  <span class="code__string">". Total cost for the order is:"</span>, totalPrice
+);</code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="recap">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Your debugging loop</h2>
+						<ol class="slide__list slide__list--center"><li>Write one small change.</li><li>Predict the result.</li><li>Run the file with Node.js.</li><li>Read the output or the first useful error.</li><li>Explain what happened, then repeat.</li></ol>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="thank-you">
+					<div class="slide__inner"><h2 class="slide__title">Keep<br /><span class="accent">experimenting.</span></h2><p class="slide__lead slide__lead--center">The terminal is not judging you. It is showing you evidence.</p></div>
+				</section>
+			</main>
+
+			<nav class="controls" aria-label="Presentation controls">
+				<div class="controls__group">
+					<button class="button" id="previous" type="button" aria-label="Previous slide">←</button>
+					<button class="button" id="next" type="button" aria-label="Next slide">→</button>
+				</div>
+				<output class="counter" id="counter" aria-live="polite">1 / 1</output>
+				<div class="controls__group controls__group--end">
+					<button class="button" id="notes" type="button">Notes</button>
+					<button class="button" id="fullscreen" type="button">Fullscreen</button>
+				</div>
+			</nav>
+		</div>
+
+		<div class="progress" aria-hidden="true"><span class="progress__bar" id="progress"></span></div>
+		<dialog class="dialog" id="notes-dialog">
+			<header class="dialog__header">
+				<h2 class="dialog__title">Presenter notes</h2>
+				<button class="button" id="close-notes" type="button" aria-label="Close presenter notes">×</button>
+			</header>
+			<div class="dialog__body" id="notes-content"></div>
+		</dialog>
+
+		<script>
+			const shell = document.querySelector('.shell');
+			const slides = [...document.querySelectorAll('.slide')];
+			const previousButton = document.querySelector('#previous');
+			const nextButton = document.querySelector('#next');
+			const counter = document.querySelector('#counter');
+			const progress = document.querySelector('#progress');
+			const notesButton = document.querySelector('#notes');
+			const notesDialog = document.querySelector('#notes-dialog');
+			const notesContent = document.querySelector('#notes-content');
+			const closeNotesButton = document.querySelector('#close-notes');
+			const fullscreenButton = document.querySelector('#fullscreen');
+			let currentIndex = 0;
+
+			function requestedIndex() {
+				const value = Number.parseInt(window.location.hash.slice(1), 10);
+
+				return Number.isInteger(value) ? value - 1 : 0;
+			}
+
+			function showSlide(index, updateHash = true) {
+				currentIndex = Math.min(Math.max(index, 0), slides.length - 1);
+
+				shell.classList.toggle('shell--content', currentIndex > 0);
+
+				slides.forEach((slide, slideIndex) => {
+					const isActive = slideIndex === currentIndex;
+
+					slide.classList.toggle('slide--active', isActive);
+					slide.setAttribute('aria-hidden', String(!isActive));
+				});
+
+				counter.value = `${currentIndex + 1} / ${slides.length}`;
+				progress.style.width = `${((currentIndex + 1) / slides.length) * 100}%`;
+				previousButton.disabled = currentIndex === 0;
+				nextButton.disabled = currentIndex === slides.length - 1;
+
+				if (updateHash) {
+					history.replaceState(null, '', `#${currentIndex + 1}`);
+				}
+
+				document.title = `${currentIndex + 1}/${slides.length} · JavaScript Week 1`;
+			}
+
+			function move(amount) {
+				showSlide(currentIndex + amount);
+			}
+
+			function openNotes() {
+				notesContent.textContent =
+					slides[currentIndex].dataset.notes ??
+					'No additional notes for this slide. Invite trainees to predict, run, and explain.';
+				notesDialog.showModal();
+			}
+
+			previousButton.addEventListener('click', () => move(-1));
+			nextButton.addEventListener('click', () => move(1));
+			notesButton.addEventListener('click', openNotes);
+			closeNotesButton.addEventListener('click', () => notesDialog.close());
+			fullscreenButton.addEventListener('click', async () => {
+				if (document.fullscreenElement) {
+					await document.exitFullscreen();
+				} else {
+					await document.documentElement.requestFullscreen();
+				}
+			});
+
+			document.addEventListener('keydown', (event) => {
+				if (notesDialog.open) {
+					return;
+				}
+
+				if (['ArrowRight', 'PageDown', ' '].includes(event.key)) {
+					event.preventDefault();
+					move(1);
+				}
+
+				if (['ArrowLeft', 'PageUp'].includes(event.key)) {
+					event.preventDefault();
+					move(-1);
+				}
+
+				if (event.key === 'Home') showSlide(0);
+				if (event.key === 'End') showSlide(slides.length - 1);
+				if (event.key.toLowerCase() === 'n') openNotes();
+				if (event.key.toLowerCase() === 'f') fullscreenButton.click();
+			});
+
+			window.addEventListener('hashchange', () => {
+				showSlide(requestedIndex(), false);
+			});
+
+			showSlide(requestedIndex(), false);
+		</script>
+	</body>
+</html>
