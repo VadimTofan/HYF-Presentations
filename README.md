@@ -4,6 +4,7 @@ Workshop presentations for HackYourFuture, hosted on GitHub Pages.
 
 - [All presentations](https://vadimtofan.github.io/HYF-Presentations/)
 - [Intro to JavaScript · Week 1](https://vadimtofan.github.io/HYF-Presentations/intro-to-javascript-week1/)
+- [Intro to JavaScript · Week 2](https://vadimtofan.github.io/HYF-Presentations/intro-to-javascript-week2/)
 
 Each presentation has its own folder containing an `index.html` entry page.
 Keep images and other presentation assets in that same folder and reference

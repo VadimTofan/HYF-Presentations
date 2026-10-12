@@ -1,0 +1,1588 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta
+			name="description"
+			content="A hands-on HackYourFuture Week 2 workshop covering conditions, functions, return values, scope, and for loops with Node.js."
+		/>
+		<title>Intro to JavaScript Week 2 · HackYourFuture</title>
+		<style>
+			:root {
+				color-scheme: dark;
+				--canvas: #0b1020;
+				--surface: #131a2d;
+				--raised: #1c2740;
+				--border: #30405e;
+				--text: #f3f7ff;
+				--muted: #a6b2ca;
+				--yellow: #f7df1e;
+				--cyan: #67e8f9;
+				--green: #72f1b8;
+				--orange: #ffb86c;
+				--red: #ff6b7a;
+				--mono: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+				--sans: 'Trebuchet MS', 'Aptos', sans-serif;
+				--space: clamp(1rem, 2.5vw, 2.5rem);
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			.page {
+				min-height: 100vh;
+				margin: 0;
+				overflow: hidden;
+				background:
+					linear-gradient(#f7df1e0a 0.0625rem, transparent 0.0625rem),
+					linear-gradient(90deg, #f7df1e0a 0.0625rem, transparent 0.0625rem),
+					radial-gradient(circle at 82% 12%, #f7df1e20, transparent 24rem),
+					var(--canvas);
+				background-size: 2.5rem 2.5rem, 2.5rem 2.5rem, auto, auto;
+				color: var(--text);
+				font-family: var(--sans);
+				font-size: 2rem;
+			}
+
+			.skip {
+				position: fixed;
+				inset: 0 auto auto 0;
+				z-index: 30;
+				padding: 0.75rem 1rem;
+				transform: translateY(-120%);
+				background: var(--yellow);
+				color: #111522;
+				font-weight: 700;
+			}
+
+			.skip:focus {
+				transform: none;
+			}
+
+			.shell {
+				min-height: 100vh;
+				display: grid;
+				grid-template-rows: auto 1fr;
+				grid-template-columns: minmax(0, 1fr);
+			}
+
+			.shell--content {
+				grid-template-rows: 1fr;
+			}
+
+			.shell--content .topbar,
+			.shell .controls {
+				display: none;
+			}
+
+			.topbar {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				min-height: 4rem;
+				padding: 0 1.4rem;
+				border-bottom: 0.0625rem solid var(--border);
+				background: #080d19e8;
+				backdrop-filter: blur(0.8rem);
+			}
+
+			.mark {
+				display: grid;
+				place-items: center;
+				width: 2.4rem;
+				height: 2.4rem;
+				background: var(--yellow);
+				color: #111522;
+				font: 900 2rem var(--mono);
+			}
+
+			.repo {
+				overflow: hidden;
+				color: var(--muted);
+				font: 1.8rem var(--mono);
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.repo__owner,
+			.accent {
+				color: var(--yellow);
+			}
+
+			.topbar__spacer {
+				flex: 1;
+			}
+
+			.badge {
+				padding: 0.3rem 0.65rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 99rem;
+				color: var(--muted);
+				font: 1.5rem var(--mono);
+			}
+
+			.deck {
+				position: relative;
+				min-height: 0;
+			}
+
+			.slide {
+				position: absolute;
+				inset: 0;
+				display: none;
+				align-content: safe center;
+				grid-template-columns: minmax(0, 1fr);
+				overflow: auto;
+				padding: clamp(1rem, 2.5vh, 2.5rem) 5vw;
+			}
+
+			.slide--active {
+				display: grid;
+				animation: reveal 220ms ease-out;
+			}
+
+			.slide--center {
+				justify-items: center;
+				text-align: center;
+			}
+
+			.slide__inner {
+				width: 100%;
+				min-width: 0;
+				overflow-wrap: anywhere;
+				margin-inline: auto;
+			}
+
+			.slide--setup .slide__inner {
+				width: calc(100% - 31.25rem);
+			}
+
+			@media (max-width: 48rem) {
+				.slide--setup .slide__inner {
+					width: 100%;
+				}
+			}
+
+			.slide--exercise .slide__inner {
+				width: calc(100% - 31.25rem);
+			}
+
+			@media (max-width: 48rem) {
+				.slide--exercise .slide__inner {
+					width: 100%;
+				}
+			}
+
+			.slide__title {
+				text-align: center;
+				margin: 0 0 1.35rem;
+				font-size: clamp(4.4rem, 10.8vw, 11.6rem);
+				line-height: 0.98;
+				letter-spacing: -0.045em;
+			}
+
+			.slide__title--welcome {
+				font-size: clamp(4.125rem, 10.125vw, 10.875rem);
+			}
+
+			.slide__language {
+				font-size: 156.25%;
+			}
+
+			.slide__tagline {
+				color: #fff;
+				font-size: 67.5%;
+			}
+
+			.slide__title--medium {
+				font-size: clamp(3.8rem, 8vw, 8.2rem);
+			}
+
+			.slide__title--declaration {
+				font-size: clamp(3.135rem, 6.6vw, 6.765rem);
+			}
+
+			.slide__lead {
+				max-width: 100%;
+				margin: 0;
+				color: var(--muted);
+				font-size: clamp(2.1rem, 4vw, 3.1rem);
+				line-height: 1.5;
+			}
+
+			.slide--example .slide__lead,
+			.slide__lead--recap {
+				text-align: center;
+			}
+
+			.slide__lead--center {
+				margin-inline: auto;
+			}
+
+			.slide__list {
+				display: grid;
+				gap: 0.7rem;
+				margin: 1.4rem 0 0;
+				padding-left: 1.5rem;
+				font-size: clamp(2rem, 3.4vw, 2.6rem);
+				line-height: 1.45;
+			}
+
+			.slide__list--center {
+				width: fit-content;
+				max-width: 100%;
+				margin-inline: auto;
+				text-align: left;
+			}
+
+			.slide__list--compact {
+				gap: 0.4rem;
+				font-size: clamp(1.8rem, 2.6vw, 2.16rem);
+			}
+
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: var(--space);
+				margin-top: 1.5rem;
+			}
+
+			.grid--puzzles {
+				gap: 0.75rem;
+				margin: 0 0 0.75rem;
+			}
+
+			.grid--three {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+
+			.grid--steps {
+				grid-template-columns: 1fr auto 1fr auto 1fr;
+				gap: calc(var(--space) / 2);
+			}
+
+			.connector {
+				align-self: center;
+				justify-self: center;
+				color: var(--yellow);
+				font: 900 2rem var(--mono);
+				line-height: 1;
+			}
+
+			@media (max-width: 48rem) {
+				.connector {
+					transform: rotate(90deg);
+				}
+			}
+
+			.card {
+				min-width: 0;
+				padding: 1.3rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.8rem;
+				background: linear-gradient(145deg, #18223aee, #10172aee);
+				box-shadow: 0 1.2rem 3rem #0005;
+			}
+
+			.card--exercise {
+				border-left: 0.32rem solid var(--green);
+			}
+
+			.card--balance {
+				margin-inline: 6.25rem;
+			}
+
+			@media (max-width: 48rem) {
+				.card--balance {
+					margin-inline: 0;
+				}
+			}
+
+			.card--circle {
+				margin-inline: 9.375rem;
+			}
+
+			@media (max-width: 48rem) {
+				.card--circle {
+					margin-inline: 0;
+				}
+			}
+
+			.card--logger {
+				padding: 0;
+			}
+
+			.card--puzzle {
+				padding: 0.75rem;
+			}
+
+			.card--warning {
+				border-left: 0.32rem solid var(--orange);
+			}
+
+			.card__label {
+				margin: 0 0 0.55rem;
+				color: var(--cyan);
+				font: 800 1.52rem var(--mono);
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+			}
+
+			.card__title {
+				margin: 0 0 0.5rem;
+				font-size: clamp(2.2rem, 3.6vw, 2.9rem);
+			}
+
+			.card__operator-label {
+				color: var(--muted);
+				font-size: 70%;
+			}
+
+			.card__copy {
+				margin: 0;
+				color: var(--muted);
+				font-size: clamp(1.8rem, 2.7vw, 2.16rem);
+				line-height: 1.45;
+			}
+
+			.code {
+				overflow: auto;
+				margin: 1.5rem 0 0;
+				padding: 1.25rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.7rem;
+				background: #050914;
+				color: #e6edf7;
+				font: clamp(1.56rem, 2.6vw, 2.06rem)/1.6 var(--mono);
+				tab-size: 2;
+				white-space: pre-wrap;
+			}
+
+			.slide--example .code,
+			.code--recap {
+				margin-inline: 9.375rem;
+			}
+
+			@media (max-width: 48rem) {
+				.slide--example .code,
+				.code--recap {
+					margin-inline: 0;
+				}
+			}
+
+			.code--loop {
+				font-size: clamp(2.028rem, 3.38vw, 2.678rem);
+			}
+
+			.code--scope,
+			.code--printing {
+				line-height: calc(1.6em - 0.25rem);
+			}
+
+			.code--scope.code--practice {
+				line-height: calc(1.6em - 1.03125rem);
+			}
+
+			.code--scope.code--exercise,
+			.code--scope.code--corrected {
+				line-height: calc(1.6em - 0.985294rem);
+			}
+
+			.code--authentication {
+				line-height: calc(1.6em - 0.4375rem);
+			}
+
+			.code--global,
+			.code--return,
+			.code--emails,
+			.code--conditions,
+			.code--infinite {
+				line-height: calc(1.6em - 0.5rem);
+			}
+
+			.code--compact {
+				font-size: clamp(1.4rem, 2vw, 1.8rem);
+				white-space: pre;
+			}
+
+			.code--puzzle {
+				margin: 0;
+				padding: 0.625rem;
+				font-size: 1.125rem;
+				line-height: 1.35;
+			}
+
+			.code__command {
+				color: var(--green);
+			}
+
+			.code__keyword {
+				color: #ff79c6;
+			}
+
+			.code__string {
+				color: var(--yellow);
+			}
+
+			.code__greeting {
+				color: #fff;
+			}
+
+			.code__number {
+				color: var(--cyan);
+			}
+
+			.code__comment {
+				color: #7f8ca8;
+			}
+
+			.term {
+				color: var(--cyan);
+				font-family: var(--mono);
+			}
+
+			.timeline {
+				display: grid;
+				gap: 0.5rem;
+				margin-top: 1.5rem;
+			}
+
+			.timeline--agenda {
+				margin-inline: clamp(1rem, 21vw, 18.75rem);
+			}
+
+			.timeline__row {
+				display: grid;
+				grid-template-columns: max-content minmax(0, 1fr) auto;
+				gap: 1rem;
+				align-items: center;
+				padding: 0.75rem 1rem;
+				border-left: 0.22rem solid var(--yellow);
+				background: var(--surface);
+			}
+
+			.timeline__time {
+				color: var(--yellow);
+				font: 800 1.8rem var(--mono);
+			}
+
+			.timeline__duration {
+				color: var(--muted);
+				font: 1.6rem var(--mono);
+			}
+
+			.flow {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 0.8rem;
+				align-items: center;
+				margin-top: 1.5rem;
+			}
+
+			.flow__step {
+				padding: 1.2rem;
+				border: 0.0625rem solid var(--border);
+				background: var(--surface);
+				text-align: center;
+			}
+
+			.flow__arrow {
+				display: none;
+				color: var(--yellow);
+				font: 900 3rem var(--mono);
+			}
+
+			.controls {
+				display: grid;
+				grid-template-columns: 1fr auto 1fr;
+				align-items: center;
+				gap: 1rem;
+				min-height: 4.2rem;
+				padding: 0.65rem 1.2rem;
+				border-top: 0.0625rem solid var(--border);
+				background: #080d19f2;
+			}
+
+			.controls__group {
+				display: flex;
+				gap: 0.5rem;
+			}
+
+			.controls__group--end {
+				justify-content: flex-end;
+			}
+
+			.button {
+				min-width: 2.7rem;
+				min-height: 2.4rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.45rem;
+				background: var(--raised);
+				color: var(--text);
+				font: 800 1.68rem var(--mono);
+				cursor: pointer;
+			}
+
+			.button:hover {
+				border-color: var(--yellow);
+			}
+
+			.button:focus-visible {
+				outline: 0.2rem solid var(--yellow);
+				outline-offset: 0.15rem;
+			}
+
+			.button:disabled {
+				cursor: not-allowed;
+				opacity: 0.45;
+			}
+
+			.counter {
+				color: var(--muted);
+				font: 1.68rem var(--mono);
+				text-align: center;
+			}
+
+			.progress {
+				position: fixed;
+				inset: auto 0 0;
+				z-index: 10;
+				height: 0.18rem;
+			}
+
+			.progress__bar {
+				display: block;
+				width: 0;
+				height: 100%;
+				background: linear-gradient(90deg, var(--yellow), var(--cyan));
+				transition: width 180ms ease;
+			}
+
+			.dialog {
+				width: min(44rem, calc(100% - 2rem));
+				max-height: 80vh;
+				padding: 0;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.8rem;
+				background: var(--surface);
+				color: var(--text);
+				box-shadow: 0 2rem 5rem #000b;
+			}
+
+			.dialog::backdrop {
+				background: #050914d9;
+				backdrop-filter: blur(0.35rem);
+			}
+
+			.dialog__header {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				padding: 1rem 1.2rem;
+				border-bottom: 0.0625rem solid var(--border);
+			}
+
+			.dialog__title {
+				flex: 1;
+				margin: 0;
+				font-size: 2rem;
+			}
+
+			.dialog__body {
+				padding: 1.2rem;
+				color: var(--muted);
+				font-size: 2.1rem;
+				line-height: 1.6;
+				white-space: pre-line;
+			}
+
+			@keyframes reveal {
+				from {
+					opacity: 0;
+					transform: translateY(0.7rem);
+				}
+			}
+
+			@media (max-width: 48rem) {
+				.grid,
+				.grid--three,
+				.flow {
+					grid-template-columns: 1fr;
+				}
+
+				.slide {
+					align-content: start;
+					padding: 2rem 5vw;
+				}
+
+				.badge,
+				.timeline__duration,
+				.controls__group--end {
+					display: none;
+				}
+
+				.timeline__row {
+					grid-template-columns: max-content minmax(0, 1fr);
+				}
+
+				.controls {
+					grid-template-columns: 1fr auto;
+				}
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				.slide--active {
+					animation: none;
+				}
+
+				.progress__bar {
+					transition: none;
+				}
+			}
+
+			@media print {
+				.page {
+					overflow: visible;
+					background: white;
+					color: black;
+				}
+
+				.topbar,
+				.controls,
+				.progress {
+					display: none;
+				}
+
+				.deck {
+					display: block;
+				}
+
+				.slide {
+					position: relative;
+					display: grid;
+					min-height: 100vh;
+					page-break-after: always;
+					color: black;
+				}
+			}
+		</style>
+	</head>
+	<body class="page">
+		<a class="skip" href="#deck">Skip to presentation</a>
+		<div class="shell">
+			<header class="topbar">
+				<span class="mark" aria-hidden="true">JS</span>
+				<span class="repo"><span class="repo__owner">hackyourfuture</span> / intro-javascript-week2</span>
+				<span class="topbar__spacer"></span>
+				<span class="badge">● Node.js workshop</span>
+				<span class="badge">Week 2</span>
+			</header>
+
+			<main class="deck" id="deck" aria-live="polite">
+				<section class="slide slide--center slide--active" data-topic="welcome" data-notes="Week 2: conditions, functions, scope, and loops. All examples run locally with Node.js.">
+					<div class="slide__inner">
+						<h1 class="slide__title slide__title--welcome"><span class="slide__language"><span class="accent">J</span>ava<span class="accent">S</span>cript</span><br /><span class="slide__tagline">makes decisions computable.</span></h1>
+						
+					</div>
+				</section>
+
+
+
+				<section class="slide slide--center" data-topic="learning-goals" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Learning goals</h2>
+						<ul class="slide__list slide__list--compact slide__list--center"><li>choose a code block using conditions and boolean operators</li><li>create and call functions with parameters and arguments</li><li>return a value and store it in a variable</li><li>explain global, function, block, and lexical scope</li><li>repeat work and visit array items using a for loop</li></ul>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="agenda" data-notes="Timing guide: 12:15-12:45 recap and conditions, including the bank balance exercise; 12:45-14:00 functions and return values, including circle area and temperature exercises. Break starts at 14:00 sharp and ends at 14:30. 14:30-15:15 scope, lexical scope, and prediction exercises. 15:15-15:25 introduce and trace for loops; 15:25-15:35 practise the number loop and string logger; 15:35-15:40 demonstrate building and returning a string; 15:40-15:55 explain array iteration and split, then complete the simulated email exercise; 15:55-16:00 recap and assignment handoff. Finish at 16:00 sharp. Use the repeat-a-message challenge as a brief prediction prompt. Keep solution walkthroughs short and use presenter notes to reveal answers promptly if exercises overrun.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Workshop agenda</h2>
+						<div class="timeline timeline--agenda"><div class="timeline__row"><span class="timeline__time">12:15</span><span>Recap &amp; conditions</span></div><div class="timeline__row"><span class="timeline__time">12:45</span><span>Functions &amp; return values</span></div><div class="timeline__row"><span class="timeline__time">14:00</span><span>Break</span></div><div class="timeline__row"><span class="timeline__time">14:30</span><span>Scope and prediction exercises</span></div><div class="timeline__row"><span class="timeline__time">15:15</span><span>For loops &amp; sending emails</span></div></div>
+					</div>
+				</section>
+
+								<section class="slide" data-topic="recap" data-notes="Outputs: 255 and true. Revisit assignment, multiplication, and comparisons before introducing conditions.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">A quick Week 1 recap</h2>
+						<pre class="code code--recap"><code><span class="code__keyword">const</span> pizzaPrice = <span class="code__number">85</span>;
+<span class="code__keyword">const</span> pizzaAmount = <span class="code__number">3</span>;
+<span class="code__keyword">const</span> totalPrice = pizzaPrice * pizzaAmount;
+
+console.log(totalPrice);
+console.log(totalPrice &gt; <span class="code__number">200</span>);</code></pre><p class="slide__lead slide__lead--recap">Predict both outputs. What type is each result?</p>
+					</div>
+				</section>
+
+<section class="slide slide--example" data-topic="const-by-default" data-notes="Prefer const whenever a variable does not need reassignment. This example throws TypeError: Assignment to constant variable. on the second line. Change const to let when assigning a new value is required; the same reassignment then works. const protects the variable binding, not the contents of an array or object. Run the failing example separately so it does not stop later examples.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Use <span class="accent">const</span> by default</h2>
+						<pre class="code"><code><span class="code__keyword">const</span> score = <span class="code__number">10</span>;
+score = <span class="code__number">20</span>;
+
+<span class="code__comment">// TypeError: Assignment to constant variable.</span></code></pre>
+
+						<p class="slide__lead">Use <span class="term">let</span> only when you need to assign a new value.<br /><span class="term">const</span> prevents reassignment.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--setup" data-topic="setup" data-notes="Run each example separately, or use distinct variable names. Repeating const declarations in the same file causes a SyntaxError.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Your Week 2 file</h2>
+						<ol class="slide__list slide__list--compact"><li>Open your lesson folder in VS Code.</li><li>Create <span class="term">week2.js</span>.</li><li>Type one example, save the file, and run it.</li></ol><pre class="code"><code><span class="code__comment"># Run once</span>
+node week2.js
+
+<span class="code__comment"># Rerun whenever you save</span>
+node --watch week2.js</code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="conditions" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title">Conditions</h2>
+						<p class="slide__lead">A condition chooses which code runs.<br />Its result is treated as true or false.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="if-else-explained" data-notes="Read the condition first. If it is true, run the first code block. Otherwise, run the else block. Only one block runs. else has no condition of its own and is optional.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">How if / else works</h2>
+						<pre class="code"><code><span class="code__keyword">if</span> (condition) {
+  <span class="code__comment">// Run this code when the condition is true.</span>
+} <span class="code__keyword">else</span> {
+  <span class="code__comment">// Run this code when the condition is false.</span>
+}</code></pre>
+
+						<div class="grid">
+							<article class="card"><h3 class="card__title">if</h3><p class="card__copy">Checks the condition. Runs its code block if the result is true.</p></article>
+							<article class="card"><h3 class="card__title">else</h3><p class="card__copy">Runs its code block if the condition is false. This part is optional.</p></article>
+						</div>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="if-else" data-notes="This matches the source example: age 18 is denied because the condition uses &gt;, not &gt;=. Ask which operator would allow 18.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Make a decision</h2>
+						<pre class="code code--recap"><code><span class="code__keyword">const</span> age = <span class="code__number">14</span>;
+
+<span class="code__keyword">if</span> (age &gt; <span class="code__number">18</span>) {
+  console.log(<span class="code__string">&quot;Allowed&quot;</span>);
+} <span class="code__keyword">else</span> {
+  console.log(<span class="code__string">&quot;Denied&quot;</span>);
+}</code></pre><p class="slide__lead slide__lead--recap">Only one code block runs. What happens when age is 18?</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="else-if-explained" data-notes="Check conditions from top to bottom. Check the next condition only if the earlier one is false. Run the code block for the first true condition, then skip the rest. If all conditions are false, run else when it is present.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">How else if works</h2>
+						<pre class="code"><code><span class="code__keyword">if</span> (firstCondition) {
+  <span class="code__comment">// Run if the first condition is true.</span>
+} <span class="code__keyword">else if</span> (secondCondition) {
+  <span class="code__comment">// Run if the first is false and the second is true.</span>
+} <span class="code__keyword">else</span> {
+  <span class="code__comment">// Run if both conditions are false.</span>
+}</code></pre>
+
+						<p class="slide__lead">Check from top to bottom. Run the code block for the first true condition, then skip the rest.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="else-if" data-notes="Assume a valid, non-negative age in this example. Try 12, 13, 19, and 20. The later condition is checked only if the earlier one is false.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">More than two choices</h2>
+						<pre class="code"><code><span class="code__keyword">const</span> age = <span class="code__number">14</span>;
+
+<span class="code__keyword">if</span> (age &lt; <span class="code__number">13</span>) {
+  console.log(<span class="code__string">&quot;Child&quot;</span>);
+} <span class="code__keyword">else</span> <span class="code__keyword">if</span> (age &lt; <span class="code__number">20</span>) {
+  console.log(<span class="code__string">&quot;Teenager&quot;</span>);
+} <span class="code__keyword">else</span> {
+  console.log(<span class="code__string">&quot;Adult&quot;</span>);
+}</code></pre><p class="slide__lead">JavaScript runs the code block for the first true condition.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="logical-operators" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">AND. OR. NOT.</h2>
+						<div class="grid"><article class="card"><h3 class="card__title">&amp;&amp; <span class="card__operator-label">- AND</span></h3><p class="card__copy">Both conditions must be true.</p></article><article class="card"><h3 class="card__title">|| <span class="card__operator-label">- OR</span></h3><p class="card__copy">At least one condition must be true.</p></article><article class="card"><h3 class="card__title">! <span class="card__operator-label">- NOT</span></h3><p class="card__copy">Reverse a boolean value.</p></article><article class="card"><h3 class="card__title">!! <span class="card__operator-label">- DOUBLE NOT</span></h3><p class="card__copy">Reverse twice: true stays true, false stays false.</p></article></div><pre class="code"><code>console.log(<span class="code__number">14</span> &gt;= <span class="code__number">13</span> &amp;&amp; <span class="code__number">14</span> &lt; <span class="code__number">20</span>); <span class="code__comment">// true</span>
+console.log(<span class="code__number">14</span> &lt; <span class="code__number">18</span> || <span class="code__number">14</span> === <span class="code__number">18</span>); <span class="code__comment">// true</span>
+console.log(!<span class="code__keyword">true</span>);               <span class="code__comment">// false</span>
+console.log(!!<span class="code__keyword">true</span>);              <span class="code__comment">// true</span></code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="user-role" data-notes="Predict guest, member, and admin. This is a teaching example, not a real authentication system.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Who is visiting?</h2>
+						<pre class="code"><code><span class="code__keyword">const</span> userRole = <span class="code__string">&quot;guest&quot;</span>;
+<span class="code__keyword">const</span> isAdmin = userRole === <span class="code__string">&quot;admin&quot;</span>;
+<span class="code__keyword">const</span> isLoggedIn = userRole !== <span class="code__string">&quot;guest&quot;</span>;
+
+<span class="code__keyword">if</span> (isAdmin) {
+  console.log(<span class="code__string">&quot;You are in charge&quot;</span>);
+} <span class="code__keyword">else</span> <span class="code__keyword">if</span> (isLoggedIn) {
+  console.log(<span class="code__string">&quot;Welcome user&quot;</span>);
+} <span class="code__keyword">else</span> {
+  console.log(<span class="code__string">&quot;Welcome guest&quot;</span>);
+}</code></pre>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="exercise-balance" data-notes="Ask trainees to test 0, 1, 1000, 1001, 3000, 3001, 10000, and 10001 before revealing the solution.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: bank balance</h2>
+						<article class="card card--exercise card--balance"><pre class="code"><code><span class="code__keyword">const</span> balance = <span class="code__number">1000</span>;</code></pre><ul class="slide__list slide__list--compact"><li>0 or less: “Please deposit some money!”</li><li>More than 0, up to 1000: “Your balance is looking okay”</li><li>More than 1000, up to 3000: “Your balance is looking good”</li><li>More than 3000, up to 10000: “Your balance is fantastic”</li><li>More than 10000: “Your balance is AMAZING!”</li></ul></article>
+					</div>
+				</section>
+
+
+
+				<section class="slide slide--center" data-topic="functions" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title">Functions</h2>
+						<p class="slide__lead">A function is a reusable piece of code.<br />Define it once. Call it when you need it.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="using-functions" data-notes="Math.random is called on Math. Math.max receives 3 and 5 as arguments. Do not expect the same random value each time.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">You already use functions</h2>
+						<pre class="code"><code><span class="code__keyword">const</span> randomNumber = Math.random();
+<span class="code__keyword">const</span> maxNumber = Math.max(<span class="code__number">3</span>, <span class="code__number">5</span>);
+
+console.log(randomNumber); <span class="code__comment">// between 0 and 1</span>
+console.log(maxNumber);    <span class="code__comment">// 5</span></code></pre><p class="slide__lead">The parentheses call the function.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="function-parts" data-notes="This is a template, not runnable code. name and parameter are placeholders; the body is where the instructions go. An empty function has no instructions between its braces.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">The parts of a function</h2>
+						<pre class="code"><code><span class="code__keyword">function</span> name(parameter) {
+  <span class="code__comment">// body</span>
+}</code></pre>
+
+						<div class="grid">
+							<article class="card"><h3 class="card__title">Keyword: function</h3><p class="card__copy">Starts the function definition.</p></article>
+							<article class="card"><h3 class="card__title">Name</h3><p class="card__copy">The name you choose for the function.</p></article>
+							<article class="card"><h3 class="card__title">Parameters</h3><p class="card__copy">Inputs the function can receive.</p></article>
+							<article class="card"><h3 class="card__title">Body: { ... }</h3><p class="card__copy">The instructions that run when the function is called.</p></article>
+						</div>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="create-function" data-notes="First remove both calls and run the file. Then add one call, then two. Each call runs the body again.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Define. Then call.</h2>
+						<pre class="code"><code><span class="code__keyword">function</span> greet() {
+  console.log(<span class="code__string">&quot;Hello, HackYourFuture!&quot;</span>);
+}
+
+greet();
+greet();</code></pre><p class="slide__lead">Defining a function does not run its body.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="parameters-arguments" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Parameters &amp; Arguments</h2>
+						<pre class="code"><code><span class="code__keyword">function</span> greet(name) {
+  console.log(<span class="code__string">&quot;Hello, &quot;</span> + name);
+}
+
+greet(<span class="code__string">&quot;Sana&quot;</span>);
+greet(<span class="code__string">&quot;Peter&quot;</span>);</code></pre><div class="grid"><article class="card"><h3 class="card__title">Parameter</h3><p class="card__copy">name is the placeholder in the function definition.</p></article><article class="card"><h3 class="card__title">Argument</h3><p class="card__copy">"Sana" is the actual value supplied in a call.</p></article></div>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="return-values" data-notes="Walk through explicitly: a becomes 5, b becomes 10, return sends 15 to the caller, returnedSum stores 15. Ask what sum(2, 3) produces.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Return a value</h2>
+						<pre class="code"><code><span class="code__keyword">function</span> sum(a, b) {
+  <span class="code__keyword">return</span> a + b;
+}
+
+<span class="code__keyword">const</span> returnedSum = sum(<span class="code__number">5</span>, <span class="code__number">10</span>);
+console.log(returnedSum); <span class="code__comment">// 15</span></code></pre><p class="slide__lead">The call produces a value. The variable stores it.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="arrow-functions" data-notes="Compare this with the earlier greeting example. const stores the arrow function in greet. The empty parentheses mean no parameters. The arrow introduces the body. Define it before calling it; both calls print the same greeting as before.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Arrow functions</h2>
+						<pre class="code"><code><span class="code__keyword">const</span> greet = () =&gt; {
+  console.log(<span class="code__string">&quot;Hello, HackYourFuture!&quot;</span>);
+};
+
+greet();
+greet();</code></pre><p class="slide__lead">Same greeting, different syntax. Call it the same way.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="return-flow" data-notes="Continue from the Return a value slide. Emphasize that return transfers a value; it does not print it.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Follow the value</h2>
+						<div class="grid grid--steps"><article class="card"><h3 class="card__title">Call</h3><p class="card__copy">sum(5, 10)</p></article><span class="connector" aria-hidden="true">→</span><article class="card"><h3 class="card__title">Return</h3><p class="card__copy">return 15</p></article><span class="connector" aria-hidden="true">→</span><article class="card"><h3 class="card__title">Store</h3><p class="card__copy">returnedSum is 15</p></article></div><p class="slide__lead">Use the returned value in another calculation.</p><pre class="code"><code><span class="code__keyword">const</span> doubledSum = returnedSum * <span class="code__number">2</span>;
+console.log(doubledSum); <span class="code__comment">// 30</span></code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="log-versus-return" data-notes="Ask trainees to predict all output lines. Output is 15, undefined, 15. console.log displays a value; return makes a value available to the caller.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Printing and returning</h2>
+						<pre class="code code--printing"><code><span class="code__keyword">function</span> printSum(a, b) {
+  console.log(a + b);
+}
+
+<span class="code__keyword">function</span> getSum(a, b) {
+  <span class="code__keyword">return</span> a + b;
+}
+
+<span class="code__keyword">const</span> printed = printSum(<span class="code__number">5</span>, <span class="code__number">10</span>); <span class="code__comment">// prints 15</span>
+<span class="code__keyword">const</span> returned = getSum(<span class="code__number">5</span>, <span class="code__number">10</span>);  <span class="code__comment">// returns 15</span>
+console.log(printed);           <span class="code__comment">// undefined</span>
+console.log(returned);          <span class="code__comment">// 15</span></code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="no-return" data-notes="The source plan stresses this difficulty. This example calls sumNoReturn itself so it actually demonstrates the missing return. Add return and predict the changed result.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Forgetting return</h2>
+						<pre class="code"><code><span class="code__keyword">function</span> sumNoReturn(a, b) {
+  a + b;
+}
+
+<span class="code__keyword">const</span> result = sumNoReturn(<span class="code__number">5</span>, <span class="code__number">10</span>);
+console.log(result); <span class="code__comment">// undefined</span></code></pre><p class="slide__lead">Calculating a value does not automatically return it.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="return-stops" data-notes="For 14, the first return ends the function immediately. For 18, execution reaches the final return.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Return ends the call</h2>
+						<pre class="code"><code><span class="code__keyword">function</span> getAccessMessage(age) {
+  <span class="code__keyword">if</span> (age &lt; <span class="code__number">18</span>) {
+    <span class="code__keyword">return</span> <span class="code__string">&quot;Denied&quot;</span>;
+  }
+
+  <span class="code__keyword">return</span> <span class="code__string">&quot;Allowed&quot;</span>;
+}
+
+console.log(getAccessMessage(<span class="code__number">14</span>)); <span class="code__comment">// Denied</span>
+console.log(getAccessMessage(<span class="code__number">18</span>)); <span class="code__comment">// Allowed</span></code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="authentication" data-notes="Follow the plan example. Ask what member returns. Explain that this demonstrates conditions and returns, not real identity verification.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Conditions in functions</h2>
+						<pre class="code code--authentication"><code><span class="code__keyword">function</span> isAuthenticated(userRole) {
+  <span class="code__keyword">const</span> isAdmin = userRole === <span class="code__string">&quot;admin&quot;</span>;
+  <span class="code__keyword">const</span> isLoggedIn = userRole !== <span class="code__string">&quot;guest&quot;</span>;
+
+  <span class="code__keyword">if</span> (isAdmin) {
+    <span class="code__keyword">return</span> <span class="code__keyword">true</span>;
+  } <span class="code__keyword">else</span> <span class="code__keyword">if</span> (isLoggedIn) {
+    <span class="code__keyword">return</span> <span class="code__keyword">true</span>;
+  }
+
+  <span class="code__keyword">return</span> <span class="code__keyword">false</span>;
+}
+
+console.log(isAuthenticated(<span class="code__string">&quot;guest&quot;</span>)); <span class="code__comment">// false</span>
+console.log(isAuthenticated(<span class="code__string">&quot;admin&quot;</span>)); <span class="code__comment">// true</span></code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="authentication-guards" data-notes="Same results as the previous example. Each return stops the function immediately, so the next condition needs no else. Admin returns true at the first guard; member returns true at the second; guest reaches false. This is a teaching example, not real identity verification.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Use early returns</h2>
+						<pre class="code code--authentication"><code><span class="code__keyword">function</span> isAuthenticated(userRole) {
+  <span class="code__keyword">const</span> isAdmin = userRole === <span class="code__string">&quot;admin&quot;</span>;
+  <span class="code__keyword">const</span> isLoggedIn = userRole !== <span class="code__string">&quot;guest&quot;</span>;
+
+  <span class="code__keyword">if</span> (isAdmin) <span class="code__keyword">return</span> <span class="code__keyword">true</span>;
+
+  <span class="code__keyword">if</span> (isLoggedIn) <span class="code__keyword">return</span> <span class="code__keyword">true</span>;
+
+  <span class="code__keyword">return</span> <span class="code__keyword">false</span>;
+}
+
+console.log(isAuthenticated(<span class="code__string">&quot;guest&quot;</span>)); <span class="code__comment">// false</span>
+console.log(isAuthenticated(<span class="code__string">&quot;admin&quot;</span>)); <span class="code__comment">// true</span></code></pre>
+						<p class="slide__lead">Each return stops the function. No else is needed.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="methods" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Calling a method</h2>
+						<p class="slide__lead">A method is a function accessed through a value or object.</p><pre class="code"><code><span class="code__keyword">const</span> message = <span class="code__string">&quot;  hello  &quot;</span>;
+<span class="code__keyword">const</span> trimmedMessage = message.trim();
+
+console.log(trimmedMessage); <span class="code__comment">// &quot;hello&quot;</span>
+console.log(message);        <span class="code__comment">// &quot;  hello  &quot;</span></code></pre><p class="slide__lead">trim() returns a new string. Capture that value.</p>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="exercise-circle" data-notes="Encourage testing radius 0, 1, and 3. Math.PI is a number, not a function call.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: circle area</h2>
+						<article class="card card--exercise card--circle"><ol class="slide__list slide__list--compact"><li>Create <span class="term">getCircleArea(radius)</span>.</li><li>Return the circle area: π × radius × radius.</li><li>Use <span class="term">Math.PI</span> for π.</li><li>Store and print the result for radius 3.</li><li>Remove return. Predict and explain the result.</li></ol></article>
+					</div>
+				</section>
+
+
+
+				<section class="slide slide--example" data-topic="exercise-temperature" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: temperature</h2>
+						<article class="card card--exercise"><ol class="slide__list slide__list--compact"><li>Create <span class="term">celsiusToFahrenheit(celsius)</span>.</li><li>Return the temperature in Fahrenheit.</li><li>Use the formula: Celsius × 9 / 5 + 32.</li><li>Store the returned value before printing it.</li><li>Check 0°C → 32°F and 100°C → 212°F.</li></ol></article>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="scope" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title">Scope</h2>
+						<p class="slide__lead">Scope determines where a variable name<br />can be used in your code.</p>
+					</div>
+				</section>
+
+				
+
+
+
+				<section class="slide slide--example" data-topic="global-local" data-notes="Outputs HackYourFuture, Sana, HackYourFuture. Ask what happens if console.log(name) is added outside: ReferenceError.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Global and local scope</h2>
+						<pre class="code code--global"><code><span class="code__keyword">const</span> course = <span class="code__string">&quot;HackYourFuture&quot;</span>;
+<span class="code__comment">// course is outside the function.</span>
+<span class="code__keyword">function</span> introduce() {
+  <span class="code__keyword">const</span> name = <span class="code__string">&quot;Sana&quot;</span>;
+  <span class="code__comment">// name belongs to the function.</span>
+  console.log(course);
+  console.log(name);
+}
+
+introduce();
+console.log(course);</code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="block-scope" data-notes="Uncomment the last line and reproduce ReferenceError. A block is a group of statements inside curly braces.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">A block has boundaries</h2>
+						<pre class="code"><code><span class="code__keyword">if</span> (<span class="code__keyword">true</span>) {
+  <span class="code__keyword">const</span> blockMessage = <span class="code__string">&quot;Inside the block&quot;</span>;
+  console.log(blockMessage);
+}
+
+<span class="code__comment">// Run separately to investigate the error:</span>
+<span class="code__comment">// console.log(blockMessage);</span></code></pre><p class="slide__lead">let and const belong to the block where they are declared.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="lexical-scope" data-notes="Output: Hello from the outer function. Lexical scope follows where code is written. This retained access is called a closure, and still works after outerFunction returns.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Lexical scope</h2>
+						<pre class="code code--global"><code><span class="code__keyword">function</span> outerFunction() {
+  <span class="code__keyword">const</span> message = <span class="code__string">&quot;Hello from the outer function&quot;</span>;
+
+  <span class="code__keyword">function</span> innerFunction() {
+    <span class="code__keyword">return</span> message;
+  }
+
+  <span class="code__keyword">return</span> innerFunction;
+}
+
+<span class="code__keyword">const</span> readMessage = outerFunction();
+console.log(readMessage());</code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--exercise" data-topic="exercise-scope" data-notes="Intentional error from the official exercise. Predict before running. The first console.log throws ReferenceError because localScope has not been initialized. Later statements never execute.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: scope</h2>
+						<pre class="code code--scope code--exercise"><code><span class="code__keyword">const</span> global = <span class="code__string">&quot;global&quot;</span>;
+
+<span class="code__keyword">function</span> scopeTest() {
+  console.log(localScope);
+  console.log(global);
+  <span class="code__keyword">const</span> localScope = <span class="code__string">&quot;localScope&quot;</span>;
+
+  <span class="code__keyword">function</span> tester() {
+    console.log(global);
+    <span class="code__keyword">const</span> testerVariable = <span class="code__string">&quot;testerVariable&quot;</span>;
+  }
+
+  tester();
+  console.log(testerVariable);
+}
+
+scopeTest();</code></pre>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="scope-solution" data-notes="After moving the declaration, output before the second error is localScope, global, global. Do not claim the later error happens in the original run.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Scope: investigate one<br />step at a time</h2>
+						<ol class="slide__list slide__list--compact slide__list--center"><li>The first log fails: localScope is used before its const declaration.</li><li>Move its declaration above the log. Run again.</li><li>The next error is testerVariable outside tester().</li><li>Keep that log inside tester(), where the variable exists.</li></ol>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="scope-fixed" data-notes="Output: localScope, global, global, testerVariable. The inner function can use global and localScope; the outer function cannot use testerVariable.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Corrected Example</h2>
+						<pre class="code code--scope code--corrected"><code><span class="code__keyword">const</span> global = <span class="code__string">&quot;global&quot;</span>;
+
+<span class="code__keyword">function</span> scopeTest() {
+  <span class="code__keyword">const</span> localScope = <span class="code__string">&quot;localScope&quot;</span>;
+  console.log(localScope);
+  console.log(global);
+
+  <span class="code__keyword">function</span> tester() {
+    <span class="code__keyword">const</span> testerVariable = <span class="code__string">&quot;testerVariable&quot;</span>;
+    console.log(global);
+    console.log(testerVariable);
+  }
+
+  tester();
+}
+
+scopeTest();</code></pre>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="exercise-string-logger" data-notes="Introduce the problem before explaining for loops, as the session plan recommends. Give trainees time to explore. The solution follows the loop explanation.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Repeat a message</h2>
+						<article class="card card--exercise card--logger"><p class="slide__lead">Create a function with these two parameters:</p><pre class="code"><code><span class="code__keyword">function</span> logString(string, repetitions) {
+  <span class="code__comment">// Write your code here.</span>
+}
+
+logString(<span class="code__string">&quot;hello&quot;</span>, <span class="code__number">3</span>);</code></pre><ul class="slide__list slide__list--compact"><li>Call your parameters string and repetitions.</li><li>Make the function work for 0, 1, and 5 repetitions.</li><li>How can the program repeat without copying console.log?</li></ul></article>
+					</div>
+				</section>
+
+				<section class="slide slide--center" data-topic="for-loop" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title">For loops</h2>
+						<p class="slide__lead">Repeat a block of code<br />while a condition remains true.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="loop-parts" data-notes="Explain that i is a counter and i++ means add one. Trace 0, 1, 2. When i is 3 the condition is false, so the body does not run.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">For loop parts</h2>
+						<pre class="code"><code><span class="code__keyword">for</span> (index; condition; update) {
+  console.log(<span class="code__string">&quot;hello&quot;</span>);
+}</code></pre><div class="grid"><article class="card"><h3 class="card__title">Index</h3><p class="card__copy">let i = 0 runs once before the loop.</p></article><article class="card"><h3 class="card__title">Condition</h3><p class="card__copy">i < 3 is checked before each repetition.</p></article><article class="card"><h3 class="card__title">Update</h3><p class="card__copy">i++ adds 1 after each repetition.</p></article></div>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="loop-trace" data-notes="Ask what happens with i &lt;= 3, then with i &lt; 0. Warn in context that omitting the update can make a true condition stay true forever.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Trace the counter</h2>
+						<pre class="code"><code><span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">0</span>; i &lt; <span class="code__number">3</span>; i++) {
+  console.log(i);
+}
+
+<span class="code__comment">// 0</span>
+<span class="code__comment">// 1</span>
+<span class="code__comment">// 2</span></code></pre><p class="slide__lead">The loop stops before printing 3.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="infinite-loops" data-notes="Predict before running. The update is missing, so i stays 0 and i < 3 remains true. This keeps printing 0. If demonstrating, use Node.js in a terminal and stop promptly with Ctrl+C; avoid running this in a browser console. Fix the loop by adding i++ after the second semicolon. The fixed version prints 0, 1, 2 and stops. A loop can also run forever if its update moves the counter away from its stopping value.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Infinite loops</h2>
+						<p class="slide__lead">A loop keeps repeating if its condition never becomes false.</p>
+
+						<pre class="code code--infinite"><code><span class="code__comment">// The counter update is missing!</span>
+<span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">0</span>; i &lt; <span class="code__number">3</span>;) {
+  console.log(i);
+}</code></pre>
+
+						<div class="grid">
+							<article class="card"><h3 class="card__title">Why? How to fix it?</h3><p class="card__copy">i stays 0, so i &lt; 3 stays true. Add i++ after the second semicolon.</p></article>
+							<article class="card"><h3 class="card__title">Stop the program</h3><p class="card__copy">Press <span class="term">Ctrl+C</span> in the terminal to stop Node.js.</p></article>
+						</div>
+					</div>
+				</section>
+
+								<section class="slide slide--exercise" data-topic="exercise-numbers" data-notes="25 numbers: 98 - 74 + 1. Ask trainees to check the first and last outputs.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: loop</h2>
+						<article class="card card--exercise"><ol class="slide__list slide__list--compact"><li>Create a for loop that prints every number from 74 to 98.</li><li>Include both 74 and 98.</li><li>Predict how many numbers it will print.</li></ol></article>
+					</div>
+				</section>
+
+<section class="slide slide--example" data-topic="string-logger-solution" data-notes="The first call prints hello three times. The second prints nothing. Both return undefined. Assume a non-negative integer count.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">String logger: solution</h2>
+						<pre class="code"><code><span class="code__keyword">function</span> logString(string, repetitions) {
+  <span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">0</span>; i &lt; repetitions; i++) {
+    console.log(string);
+  }
+}
+
+logString(<span class="code__string">&quot;hello&quot;</span>, <span class="code__number">3</span>);
+logString(<span class="code__string">&quot;hello&quot;</span>, <span class="code__number">0</span>);</code></pre><p class="slide__lead">This function prints messages. It does not return a result.</p>
+					</div>
+				</section>
+
+				
+
+				<section class="slide slide--example" data-topic="loop-return" data-notes="The calls print an empty string, hello, and hello repeated three times. Keep return after the loop: returning inside would stop at the first repetition. Reconnect loops to return values.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Build and return</h2>
+						<pre class="code code--return"><code><span class="code__keyword">function</span> spam(number) {
+  <span class="code__keyword">let</span> repeated = <span class="code__string">&quot;&quot;</span>;
+
+  <span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">0</span>; i &lt; number; i++) {
+    repeated = repeated + <span class="code__string">&quot;hello&quot;</span>;
+  }
+
+  <span class="code__keyword">return</span> repeated;
+}
+
+console.log(spam(<span class="code__number">0</span>)); <span class="code__comment">// empty string</span>
+console.log(spam(<span class="code__number">1</span>)); <span class="code__comment">// hello</span>
+console.log(spam(<span class="code__number">3</span>)); <span class="code__comment">// hellohellohello</span></code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="arrays-loop" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Visit every array item</h2>
+						<pre class="code"><code><span class="code__keyword">const</span> recipients = [<span class="code__string">&quot;Sana&quot;</span>, <span class="code__string">&quot;Peter&quot;</span>, <span class="code__string">&quot;Anna&quot;</span>];
+
+<span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">0</span>; i &lt; recipients.length; i++) {
+  <span class="code__keyword">const</span> recipient = recipients[i];
+  console.log(recipient);
+}</code></pre><p class="slide__lead">Indexes start at 0. The last index is length − 1.</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="split-string" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">String to list</h2>
+						<pre class="code"><code><span class="code__keyword">const</span> emailList = <span class="code__string">&quot;sana@gmail.com|peter@gmail.com&quot;</span>;
+<span class="code__keyword">const</span> recipients = emailList.split(<span class="code__string">&quot;|&quot;</span>);
+
+console.log(recipients);
+<span class="code__comment">// [&quot;sana@gmail.com&quot;, &quot;peter@gmail.com&quot;]</span></code></pre><p class="slide__lead">split("|") separates the text at each | and returns an array.</p>
+					</div>
+				</section>
+
+				<section class="slide" data-topic="exercise-emails" data-notes="This function only logs a message; no real emails are sent. Expect six output lines. Let trainees combine split, indexes, and function calls.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: send emails</h2>
+						<article class="card card--exercise"><p class="slide__lead">Anna from HR sent the recipients in one string.</p><pre class="code code--emails"><code><span class="code__keyword">const</span> emailList =
+  <span class="code__string">&quot;benjamin@gmail.com|peter@gmail.com|hans@gmail.com|&quot;</span> +
+  <span class="code__string">&quot;ahmad@gmail.com|sana@gmail.com|virgeen@gmail.com&quot;</span>;
+
+<span class="code__keyword">function</span> sendEmailTo(recipient) {
+  console.log(<span class="code__string">&quot;email sent to &quot;</span> + recipient);
+}</code></pre><ol class="slide__list slide__list--compact"><li>Split the string at each |.</li><li>Use a for loop to visit every recipient.</li><li>Call sendEmailTo once for each recipient.</li></ol></article>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="recreate-infinite-loops" data-notes="Discuss before running: identify what prevents the loop from stopping and propose a fix. Run separately in Node.js; stop with Ctrl+C. Answer: Missing update; add i++. The fixed loop prints 0, 1, 2. This example is for discussion, not browser-console execution.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Why does it never stop?</h2>
+						<pre class="code code--loop"><code><span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">0</span>; i &lt; <span class="code__number">3</span>;) {
+  console.log(i);
+}</code></pre>
+
+						<p class="slide__lead">What goes wrong, and how would you fix it?</p>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="recreate-infinite-loops-2" data-notes="Discuss before running: identify what prevents the loop from stopping and propose a fix. Run separately in Node.js; stop with Ctrl+C. Answer: i decreases away from 3; use i++. The fixed loop prints 0, 1, 2. This example is for discussion, not browser-console execution.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Loop 2</h2>
+						<pre class="code code--loop"><code><span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">0</span>; i &lt; <span class="code__number">3</span>; i--) {
+  console.log(i);
+}</code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="recreate-infinite-loops-3" data-notes="Discuss before running: identify what prevents the loop from stopping and propose a fix. Run separately in Node.js; stop with Ctrl+C. Answer: The condition is always true; use i &lt; 3. The fixed loop prints 0, 1, 2. This example is for discussion, not browser-console execution.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Loop 3</h2>
+						<pre class="code code--loop"><code><span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">0</span>; <span class="code__keyword">true</span>; i++) {
+  console.log(i);
+}</code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="recreate-infinite-loops-4" data-notes="Discuss before running: identify what prevents the loop from stopping and propose a fix. Run separately in Node.js; stop with Ctrl+C. Answer: The body resets i to 0 every time; remove that assignment. The fixed loop prints 0, 1, 2. This example is for discussion, not browser-console execution.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Loop 4</h2>
+						<pre class="code code--loop"><code><span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">0</span>; i &lt; <span class="code__number">3</span>; i++) {
+  i = <span class="code__number">0</span>;
+  console.log(i);
+}</code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="recreate-infinite-loops-5" data-notes="Discuss before running: identify what prevents the loop from stopping and propose a fix. Run separately in Node.js; stop with Ctrl+C. Answer: j changes but the condition checks i; update i instead. The fixed loop prints 0, 1, 2. This example is for discussion, not browser-console execution.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Loop 5</h2>
+						<pre class="code code--loop"><code><span class="code__keyword">let</span> j = <span class="code__number">0</span>;
+<span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">0</span>; i &lt; <span class="code__number">3</span>; j++) {
+  console.log(i);
+}</code></pre>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="recreate-infinite-loops-6" data-notes="Discuss before running: identify what prevents the loop from stopping and propose a fix. Run separately in Node.js; stop with Ctrl+C. Answer: Starting at 1 and adding 2 visits only odd numbers, so i never equals 4; use i &lt; 4 or update by 1. The fixed loop prints 1, 3 with i &lt; 4, or 1, 2, 3 with i++. This example is for discussion, not browser-console execution.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Loop 6</h2>
+						<pre class="code code--loop"><code><span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">1</span>; i !== <span class="code__number">4</span>; i = i + <span class="code__number">2</span>) {
+  console.log(i);
+}</code></pre>
+					</div>
+				</section>
+
+				
+
+				<section class="slide" data-topic="recap-week2" data-notes="Answers: first matching branch; placeholder versus supplied value; undefined; no; length is one beyond the last valid index.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Explain it to a neighbour</h2>
+						<ul class="slide__list slide__list--compact slide__list--center"><li>Which code block runs in an if / else if / else chain?</li><li>What is the difference between a parameter and an argument?</li><li>What does a call produce when a function has no return?</li><li>Can an outer function read variables declared inside an inner function?</li><li>Why do array loops normally use i < array.length?</li></ul>
+					</div>
+				</section>
+
+				
+
+				<section class="slide slide--center" data-topic="thank-you" data-notes="">
+					<div class="slide__inner">
+						<h2 class="slide__title">Keep<br /><span class="accent">experimenting.</span></h2>
+						
+					</div>
+				</section>
+
+				
+				<section class="slide slide--exercise" data-topic="practice-tickets" data-notes="Use the free-ticket condition first: if (age &lt; 6) return 0; then if (isStudent || age &gt;= 65) return 50; finally return 100. Ask why checking the discount first gives the wrong result for a five-year-old student.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: ticket price</h2>
+						<article class="card card--exercise">
+							<p class="slide__lead">Combine conditions, boolean operators, and a return value.</p>
+							<ol class="slide__list slide__list--compact">
+								<li>Create getTicketPrice(age, isStudent). Assume age is non-negative.</li>
+								<li>Return 0 for children under 6. Otherwise, return 50 for students or people aged 65 and above. Return 100 for everyone else.</li>
+								<li>Check (5, true) → 0, (6, false) → 100, (20, true) → 50, and (65, false) → 50.</li>
+								<li>Store one returned price in a const variable and print it.</li>
+							</ol>
+						</article>
+					</div>
+				</section>
+
+				<section class="slide slide--exercise" data-topic="practice-arrow-area" data-notes="const getRectangleArea = (width, height) =&gt; { return width * height; }; With a code block, removing return makes the function return undefined. A calculation alone does not return its result.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: rectangle area</h2>
+						<article class="card card--exercise">
+							<p class="slide__lead">Use an arrow function with two parameters.</p>
+							<ol class="slide__list slide__list--compact">
+								<li>Create getRectangleArea(width, height) as an arrow function with a code block.</li>
+								<li>Return width × height. Assume both dimensions are non-negative.</li>
+								<li>Store and print the result for (4, 3). Check (4, 3) → 12 and (0, 5) → 0.</li>
+								<li>Remove return. Predict the result of the same call, then run it and explain.</li>
+							</ol>
+						</article>
+					</div>
+				</section>
+
+				<section class="slide slide--example" data-topic="practice-scope-prediction" data-notes="Original output: Inside, Outside. After removing the inner declaration: Outside, Outside. The returned function reads the variable from where it was defined, even after makeReader has returned. This revisits the lexical scope example without changing the outer variable.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: follow the scope</h2>
+						<pre class="code code--scope code--practice"><code>const message = &quot;Outside&quot;;
+
+function makeReader() {
+  const message = &quot;Inside&quot;;
+  return function readMessage() {
+    return message;
+  };
+}
+
+const reader = makeReader();
+console.log(reader());
+console.log(message);</code></pre>
+							<ol class="slide__list slide__list--compact">
+								<li>Predict both outputs before running. Which message does each code block use?</li>
+								<li>Remove the inner const message declaration. Predict and run again.</li>
+							</ol>
+					</div>
+				</section>
+
+				<section class="slide slide--exercise" data-topic="practice-repeat-string" data-notes="Use let result = &quot;&quot;; for (let i = 0; i &lt; repetitions; i++) { result = result + text; } return result; Keep return after the loop so every repetition runs. With zero repetitions, return the empty string.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: build a message</h2>
+						<article class="card card--exercise">
+							<p class="slide__lead">Return a string built by a for loop.</p>
+							<ol class="slide__list slide__list--compact">
+								<li>Create repeatText(text, repetitions). Assume repetitions is a non-negative whole number.</li>
+								<li>Start with an empty string. Add text once per repetition using a for loop.</li>
+								<li>Return the finished string after the loop, then print the returned value.</li>
+								<li>Check (&quot;ha&quot;, 3) → &quot;hahaha&quot;, (&quot;Hi&quot;, 1) → &quot;Hi&quot;, and (&quot;Hi&quot;, 0) → &quot;&quot;.</li>
+							</ol>
+						</article>
+					</div>
+				</section>
+
+				<section class="slide slide--exercise" data-topic="practice-array-total" data-notes="function getTotal(prices) { let total = 0; for (let i = 0; i &lt; prices.length; i++) { total = total + prices[i]; } return total; } Use i &lt; prices.length, not &lt;=, because the last valid index is length - 1. The empty array keeps total at zero.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: total the prices</h2>
+						<article class="card card--exercise">
+							<p class="slide__lead">Combine array indexes, a loop, and a function.</p>
+							<ol class="slide__list slide__list--compact">
+								<li>Create getTotal(prices). Assume prices contains only non-negative numbers.</li>
+								<li>Start a total at 0. Use a for loop to add every array item once.</li>
+								<li>Return the total after the loop. Store and print the result.</li>
+								<li>Check [85, 40, 25] → 150, [10] → 10, and [] → 0.</li>
+							</ol>
+						</article>
+					</div>
+				</section>
+
+				<section class="slide slide--exercise" data-topic="practice-guest-list" data-notes="const names = guestList.split(&quot;|&quot;); for (let i = 0; i &lt; names.length; i++) { const name = names[i].trim(); if (name !== &quot;&quot;) { console.log(&quot;Welcome, &quot; + name); } } Expected messages: Welcome, Sana; Welcome, Peter; Welcome, Anna. trim returns a new string. The function prints messages and needs no return value.">
+					<div class="slide__inner">
+						<h2 class="slide__title slide__title--medium">Exercise: welcome the guests</h2>
+						<article class="card card--exercise">
+							<p class="slide__lead">Turn one string into a list and visit every name.</p>
+							<ol class="slide__list slide__list--compact">
+								<li>Create welcomeGuests(guestList). Split guestList at each |.</li>
+								<li>Loop through the names. Use trim() and store the trimmed name.</li>
+								<li>If the name is not an empty string, print &quot;Welcome, &quot; followed by the name.</li>
+								<li>Check &quot; Sana | Peter || Anna &quot; → three messages. Check &quot;&quot; → no messages.</li>
+							</ol>
+						</article>
+					</div>
+				</section>
+
+			</main>
+
+			<nav class="controls" aria-label="Presentation controls">
+				<div class="controls__group">
+					<button class="button" id="previous" type="button" aria-label="Previous slide">←</button>
+					<button class="button" id="next" type="button" aria-label="Next slide">→</button>
+				</div>
+				<output class="counter" id="counter" aria-live="polite">1 / 1</output>
+				<div class="controls__group controls__group--end">
+					<button class="button" id="notes" type="button">Notes</button>
+					<button class="button" id="fullscreen" type="button">Fullscreen</button>
+				</div>
+			</nav>
+		</div>
+
+		<div class="progress" aria-hidden="true"><span class="progress__bar" id="progress"></span></div>
+		<dialog class="dialog" id="notes-dialog">
+			<header class="dialog__header">
+				<h2 class="dialog__title">Presenter notes</h2>
+				<button class="button" id="close-notes" type="button" aria-label="Close presenter notes">×</button>
+			</header>
+			<div class="dialog__body" id="notes-content"></div>
+		</dialog>
+
+		<script>
+			const shell = document.querySelector('.shell');
+			const slides = [...document.querySelectorAll('.slide')];
+			const previousButton = document.querySelector('#previous');
+			const nextButton = document.querySelector('#next');
+			const counter = document.querySelector('#counter');
+			const progress = document.querySelector('#progress');
+			const notesButton = document.querySelector('#notes');
+			const notesDialog = document.querySelector('#notes-dialog');
+			const notesContent = document.querySelector('#notes-content');
+			const closeNotesButton = document.querySelector('#close-notes');
+			const fullscreenButton = document.querySelector('#fullscreen');
+			let currentIndex = 0;
+
+			function requestedIndex() {
+				const value = Number.parseInt(window.location.hash.slice(1), 10);
+
+				return Number.isInteger(value) ? value - 1 : 0;
+			}
+
+			function showSlide(index, updateHash = true) {
+				currentIndex = Math.min(Math.max(index, 0), slides.length - 1);
+
+				shell.classList.toggle('shell--content', currentIndex > 0);
+
+				slides.forEach((slide, slideIndex) => {
+					const isActive = slideIndex === currentIndex;
+
+					slide.classList.toggle('slide--active', isActive);
+					slide.setAttribute('aria-hidden', String(!isActive));
+				});
+
+				counter.value = `${currentIndex + 1} / ${slides.length}`;
+				progress.style.width = `${((currentIndex + 1) / slides.length) * 100}%`;
+				previousButton.disabled = currentIndex === 0;
+				nextButton.disabled = currentIndex === slides.length - 1;
+
+				if (updateHash) {
+					history.replaceState(null, '', `#${currentIndex + 1}`);
+				}
+
+				document.title = `${currentIndex + 1}/${slides.length} · JavaScript Week 2`;
+			}
+
+			function move(amount) {
+				showSlide(currentIndex + amount);
+			}
+
+			function openNotes() {
+				notesContent.textContent =
+					slides[currentIndex].dataset.notes ??
+					'No additional notes for this slide. Invite trainees to predict, run, and explain.';
+				notesDialog.showModal();
+			}
+
+			previousButton.addEventListener('click', () => move(-1));
+			nextButton.addEventListener('click', () => move(1));
+			notesButton.addEventListener('click', openNotes);
+			closeNotesButton.addEventListener('click', () => notesDialog.close());
+			fullscreenButton.addEventListener('click', async () => {
+				if (document.fullscreenElement) {
+					await document.exitFullscreen();
+				} else {
+					await document.documentElement.requestFullscreen();
+				}
+			});
+
+			document.addEventListener('keydown', (event) => {
+				if (notesDialog.open) {
+					return;
+				}
+
+				if (['ArrowRight', 'PageDown', ' '].includes(event.key)) {
+					event.preventDefault();
+					move(1);
+				}
+
+				if (['ArrowLeft', 'PageUp'].includes(event.key)) {
+					event.preventDefault();
+					move(-1);
+				}
+
+				if (event.key === 'Home') showSlide(0);
+				if (event.key === 'End') showSlide(slides.length - 1);
+				if (event.key.toLowerCase() === 'n') openNotes();
+				if (event.key.toLowerCase() === 'f') fullscreenButton.click();
+			});
+
+			window.addEventListener('hashchange', () => {
+				showSlide(requestedIndex(), false);
+			});
+
+			showSlide(requestedIndex(), false);
+		</script>
+	</body>
+</html>
