@@ -1,0 +1,1475 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta
+			name="description"
+			content="A hands-on HackYourFuture Week 3 workshop covering objects, arrays of objects, array methods, and the call stack with Node.js."
+		/>
+		<title>Intro to JavaScript Week 3 · HackYourFuture</title>
+		<style>
+			:root {
+				color-scheme: dark;
+				--canvas: #0b1020;
+				--surface: #131a2d;
+				--raised: #1c2740;
+				--border: #30405e;
+				--text: #f3f7ff;
+				--muted: #a6b2ca;
+				--yellow: #f7df1e;
+				--cyan: #67e8f9;
+				--green: #72f1b8;
+				--orange: #ffb86c;
+				--red: #ff6b7a;
+				--mono: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+				--sans: 'Trebuchet MS', 'Aptos', sans-serif;
+				--space: clamp(1rem, 2.5vw, 2.5rem);
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			.page {
+				min-height: 100vh;
+				margin: 0;
+				overflow: hidden;
+				background:
+					linear-gradient(#f7df1e0a 0.0625rem, transparent 0.0625rem),
+					linear-gradient(90deg, #f7df1e0a 0.0625rem, transparent 0.0625rem),
+					radial-gradient(circle at 82% 12%, #f7df1e20, transparent 24rem),
+					var(--canvas);
+				background-size: 2.5rem 2.5rem, 2.5rem 2.5rem, auto, auto;
+				color: var(--text);
+				font-family: var(--sans);
+				font-size: 2rem;
+			}
+
+			.skip {
+				position: fixed;
+				inset: 0 auto auto 0;
+				z-index: 30;
+				padding: 0.75rem 1rem;
+				transform: translateY(-120%);
+				background: var(--yellow);
+				color: #111522;
+				font-weight: 700;
+			}
+
+			.skip:focus {
+				transform: none;
+			}
+
+			.shell {
+				min-height: 100vh;
+				display: grid;
+				grid-template-rows: auto 1fr;
+				grid-template-columns: minmax(0, 1fr);
+			}
+
+			.shell--content {
+				grid-template-rows: 1fr;
+			}
+
+			.shell--content .topbar,
+			.shell .controls {
+				display: none;
+			}
+
+			.topbar {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				min-height: 4rem;
+				padding: 0 1.4rem;
+				border-bottom: 0.0625rem solid var(--border);
+				background: #080d19e8;
+				backdrop-filter: blur(0.8rem);
+			}
+
+			.mark {
+				display: grid;
+				place-items: center;
+				width: 2.4rem;
+				height: 2.4rem;
+				background: var(--yellow);
+				color: #111522;
+				font: 900 2rem var(--mono);
+			}
+
+			.repo {
+				overflow: hidden;
+				color: var(--muted);
+				font: 1.8rem var(--mono);
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.repo__owner,
+			.accent {
+				color: var(--yellow);
+			}
+
+			.topbar__spacer {
+				flex: 1;
+			}
+
+			.badge {
+				padding: 0.3rem 0.65rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 99rem;
+				color: var(--muted);
+				font: 1.5rem var(--mono);
+			}
+
+			.deck {
+				position: relative;
+				min-height: 0;
+			}
+
+			.slide {
+				position: absolute;
+				inset: 0;
+				display: none;
+				align-content: safe center;
+				grid-template-columns: minmax(0, 1fr);
+				overflow: auto;
+				padding: clamp(1rem, 2.5vh, 2.5rem) 5vw;
+			}
+
+			.slide--active {
+				display: grid;
+				animation: reveal 220ms ease-out;
+			}
+
+			.slide--center {
+				justify-items: center;
+				text-align: center;
+			}
+
+			.slide__inner {
+				width: 100%;
+				min-width: 0;
+				overflow-wrap: anywhere;
+				margin-inline: auto;
+			}
+
+			.slide--setup .slide__inner {
+				width: calc(100% - 31.25rem);
+			}
+
+			@media (max-width: 48rem) {
+				.slide--setup .slide__inner {
+					width: 100%;
+				}
+			}
+
+			.slide--exercise .slide__inner {
+				width: calc(100% - 31.25rem);
+			}
+
+			@media (max-width: 48rem) {
+				.slide--exercise .slide__inner {
+					width: 100%;
+				}
+			}
+
+			.slide__title {
+				text-align: center;
+				margin: 0 0 1.35rem;
+				font-size: clamp(4.4rem, 10.8vw, 11.6rem);
+				line-height: 0.98;
+				letter-spacing: -0.045em;
+			}
+
+			.slide__title--welcome {
+				font-size: clamp(4.125rem, 10.125vw, 10.875rem);
+			}
+
+			.slide__language {
+				font-size: 156.25%;
+			}
+
+			.slide__tagline {
+				color: #fff;
+				font-size: clamp(0.9rem, 5.4vw, 5.4rem);
+				white-space: nowrap;
+			}
+
+			.slide__title--medium {
+				font-size: clamp(3.8rem, 8vw, 8.2rem);
+			}
+
+			.slide__title--declaration {
+				font-size: clamp(3.135rem, 6.6vw, 6.765rem);
+			}
+
+			.slide__lead {
+				max-width: 100%;
+				margin: 0;
+				color: var(--muted);
+				font-size: clamp(2.1rem, 4vw, 3.1rem);
+				line-height: 1.5;
+			}
+
+			.slide--example .slide__lead,
+			.slide__lead--recap {
+				text-align: center;
+			}
+
+			.slide__lead--center {
+				margin-inline: auto;
+			}
+
+			.slide__list {
+				display: grid;
+				gap: 0.7rem;
+				margin: 1.4rem 0 0;
+				padding-left: 1.5rem;
+				font-size: clamp(2rem, 3.4vw, 2.6rem);
+				line-height: 1.45;
+			}
+
+			.slide__list--center {
+				width: fit-content;
+				max-width: 100%;
+				margin-inline: auto;
+				text-align: left;
+			}
+
+			.slide__list--compact {
+				gap: 0.4rem;
+				font-size: clamp(1.8rem, 2.6vw, 2.16rem);
+			}
+
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: var(--space);
+				margin-top: 1.5rem;
+			}
+
+			.grid--puzzles {
+				gap: 0.75rem;
+				margin: 0 0 0.75rem;
+			}
+
+			.grid--three {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+
+			.grid--steps {
+				grid-template-columns: 1fr auto 1fr auto 1fr;
+				gap: calc(var(--space) / 2);
+			}
+
+			.connector {
+				align-self: center;
+				justify-self: center;
+				color: var(--yellow);
+				font: 900 2rem var(--mono);
+				line-height: 1;
+			}
+
+			@media (max-width: 48rem) {
+				.connector {
+					transform: rotate(90deg);
+				}
+			}
+
+			.card {
+				min-width: 0;
+				padding: 1.3rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.8rem;
+				background: linear-gradient(145deg, #18223aee, #10172aee);
+				box-shadow: 0 1.2rem 3rem #0005;
+			}
+
+			.card--exercise {
+				border-left: 0.32rem solid var(--green);
+			}
+
+			.card--balance {
+				margin-inline: 6.25rem;
+			}
+
+			@media (max-width: 48rem) {
+				.card--balance {
+					margin-inline: 0;
+				}
+			}
+
+			.card--circle {
+				margin-inline: 9.375rem;
+			}
+
+			@media (max-width: 48rem) {
+				.card--circle {
+					margin-inline: 0;
+				}
+			}
+
+			.card--logger {
+				padding: 0;
+			}
+
+			.card--puzzle {
+				padding: 0.75rem;
+			}
+
+			.card--warning {
+				border-left: 0.32rem solid var(--orange);
+			}
+
+			.card__label {
+				margin: 0 0 0.55rem;
+				color: var(--cyan);
+				font: 800 1.52rem var(--mono);
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+			}
+
+			.card__title {
+				margin: 0 0 0.5rem;
+				font-size: clamp(2.2rem, 3.6vw, 2.9rem);
+			}
+
+			.card__operator-label {
+				color: var(--muted);
+				font-size: 70%;
+			}
+
+			.card__copy {
+				margin: 0;
+				color: var(--muted);
+				font-size: clamp(1.8rem, 2.7vw, 2.16rem);
+				line-height: 1.45;
+			}
+
+			.code {
+				overflow: auto;
+				margin: 1.5rem 0 0;
+				padding: 1.25rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.7rem;
+				background: #050914;
+				color: #e6edf7;
+				font: clamp(1.56rem, 2.6vw, 2.06rem)/1.6 var(--mono);
+				tab-size: 2;
+				white-space: pre-wrap;
+			}
+
+			.slide--example .code,
+			.code--recap {
+				margin-inline: 9.375rem;
+			}
+
+			@media (max-width: 48rem) {
+				.slide--example .code,
+				.code--recap {
+					margin-inline: 0;
+				}
+			}
+
+			.code--loop {
+				font-size: clamp(2.028rem, 3.38vw, 2.678rem);
+			}
+
+			.code--scope,
+			.code--printing {
+				line-height: calc(1.6em - 0.25rem);
+			}
+
+			.code--scope.code--practice {
+				line-height: calc(1.6em - 1.03125rem);
+			}
+
+			.code--scope.code--exercise,
+			.code--scope.code--corrected {
+				line-height: calc(1.6em - 0.985294rem);
+			}
+
+			.code--authentication {
+				line-height: calc(1.6em - 0.4375rem);
+			}
+
+			.code--global,
+			.code--return,
+			.code--emails,
+			.code--conditions,
+			.code--infinite {
+				line-height: calc(1.6em - 0.5rem);
+			}
+
+			.code--compact {
+				font-size: clamp(1.4rem, 2vw, 1.8rem);
+				white-space: pre;
+			}
+
+			.code--puzzle {
+				margin: 0;
+				padding: 0.625rem;
+				font-size: 1.125rem;
+				line-height: 1.35;
+			}
+
+			.code__command {
+				color: var(--green);
+			}
+
+			.code__keyword {
+				color: #ff79c6;
+			}
+
+			.code__variable {
+				color: var(--green);
+			}
+
+			.code__function {
+				color: var(--orange);
+			}
+
+			.code__string {
+				color: var(--yellow);
+			}
+
+			.code__greeting {
+				color: #fff;
+			}
+
+			.code__number {
+				color: var(--cyan);
+			}
+
+			.code__comment {
+				color: #7f8ca8;
+			}
+
+			.term {
+				color: var(--cyan);
+				font-family: var(--mono);
+			}
+
+			.timeline {
+				display: grid;
+				gap: 0.5rem;
+				margin-top: 1.5rem;
+			}
+
+			.timeline--agenda {
+				margin-inline: clamp(1rem, 21vw, 18.75rem);
+			}
+
+			.timeline__row {
+				display: grid;
+				grid-template-columns: max-content minmax(0, 1fr) auto;
+				gap: 1rem;
+				align-items: center;
+				padding: 0.75rem 1rem;
+				border-left: 0.22rem solid var(--yellow);
+				background: var(--surface);
+			}
+
+			.timeline__time {
+				color: var(--yellow);
+				font: 800 1.8rem var(--mono);
+			}
+
+			.timeline__duration {
+				color: var(--muted);
+				font: 1.6rem var(--mono);
+			}
+
+			.flow {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 0.8rem;
+				align-items: center;
+				margin-top: 1.5rem;
+			}
+
+			.flow__step {
+				padding: 1.2rem;
+				border: 0.0625rem solid var(--border);
+				background: var(--surface);
+				text-align: center;
+			}
+
+			.flow__arrow {
+				display: none;
+				color: var(--yellow);
+				font: 900 3rem var(--mono);
+			}
+
+			.controls {
+				display: grid;
+				grid-template-columns: 1fr auto 1fr;
+				align-items: center;
+				gap: 1rem;
+				min-height: 4.2rem;
+				padding: 0.65rem 1.2rem;
+				border-top: 0.0625rem solid var(--border);
+				background: #080d19f2;
+			}
+
+			.controls__group {
+				display: flex;
+				gap: 0.5rem;
+			}
+
+			.controls__group--end {
+				justify-content: flex-end;
+			}
+
+			.button {
+				min-width: 2.7rem;
+				min-height: 2.4rem;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.45rem;
+				background: var(--raised);
+				color: var(--text);
+				font: 800 1.68rem var(--mono);
+				cursor: pointer;
+			}
+
+			.button:hover {
+				border-color: var(--yellow);
+			}
+
+			.button:focus-visible {
+				outline: 0.2rem solid var(--yellow);
+				outline-offset: 0.15rem;
+			}
+
+			.button:disabled {
+				cursor: not-allowed;
+				opacity: 0.45;
+			}
+
+			.counter {
+				color: var(--muted);
+				font: 1.68rem var(--mono);
+				text-align: center;
+			}
+
+			.progress {
+				position: fixed;
+				inset: auto 0 0;
+				z-index: 10;
+				height: 0.18rem;
+			}
+
+			.progress__bar {
+				display: block;
+				width: 0;
+				height: 100%;
+				background: linear-gradient(90deg, var(--yellow), var(--cyan));
+				transition: width 180ms ease;
+			}
+
+			.dialog {
+				width: min(44rem, calc(100% - 2rem));
+				max-height: 80vh;
+				padding: 0;
+				border: 0.0625rem solid var(--border);
+				border-radius: 0.8rem;
+				background: var(--surface);
+				color: var(--text);
+				box-shadow: 0 2rem 5rem #000b;
+			}
+
+			.dialog::backdrop {
+				background: #050914d9;
+				backdrop-filter: blur(0.35rem);
+			}
+
+			.dialog__header {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				padding: 1rem 1.2rem;
+				border-bottom: 0.0625rem solid var(--border);
+			}
+
+			.dialog__title {
+				flex: 1;
+				margin: 0;
+				font-size: 2rem;
+			}
+
+			.dialog__body {
+				padding: 1.2rem;
+				color: var(--muted);
+				font-size: 2.1rem;
+				line-height: 1.6;
+				white-space: pre-line;
+			}
+
+			@keyframes reveal {
+				from {
+					opacity: 0;
+					transform: translateY(0.7rem);
+				}
+			}
+
+			@media (max-width: 48rem) {
+				.grid,
+				.grid--three,
+				.flow {
+					grid-template-columns: 1fr;
+				}
+
+				.slide {
+					align-content: start;
+					padding: 2rem 5vw;
+				}
+
+				.badge,
+				.timeline__duration,
+				.controls__group--end {
+					display: none;
+				}
+
+				.timeline__row {
+					grid-template-columns: max-content minmax(0, 1fr);
+				}
+
+				.controls {
+					grid-template-columns: 1fr auto;
+				}
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				.slide--active {
+					animation: none;
+				}
+
+				.progress__bar {
+					transition: none;
+				}
+			}
+
+			@media print {
+				.page {
+					overflow: visible;
+					background: white;
+					color: black;
+				}
+
+				.topbar,
+				.controls,
+				.progress {
+					display: none;
+				}
+
+				.deck {
+					display: block;
+				}
+
+				.slide {
+					position: relative;
+					display: grid;
+					min-height: 100vh;
+					page-break-after: always;
+					color: black;
+				}
+			}
+		
+            .slide__title--medium {
+                font-size: clamp(2.8rem, 6vw, 5.5rem);
+            }
+
+            .slide__inner {
+                max-width: 80rem;
+            }
+
+            .slide__list--compact {
+                font-size: clamp(1.4rem, 2.4vw, 2rem);
+            }
+
+            .slide__lead {
+                font-size: clamp(1.5rem, 2.8vw, 2.4rem);
+            }
+
+            .code {
+                font-size: clamp(1.1rem, 2vw, 1.75rem);
+                line-height: 1.5;
+            }
+
+            .code--trip {
+                font-size: clamp(1rem, 1.8vw, 1.5rem);
+                line-height: 1.4;
+            }
+
+            .resource {
+                color: var(--cyan);
+                text-decoration-thickness: 0.08em;
+                text-underline-offset: 0.16em;
+            }
+
+            .resource:hover {
+                color: var(--yellow);
+            }
+
+            .resource:focus-visible {
+                outline: 0.15rem solid var(--yellow);
+                outline-offset: 0.2rem;
+            }
+
+            .trace {
+                display: grid;
+                gap: 0.35rem;
+                font: clamp(1rem, 1.9vw, 1.6rem)/1.5 var(--mono);
+            }
+
+            .trace__row {
+                display: grid;
+                grid-template-columns: 4rem minmax(0, 1fr);
+                gap: 0.75rem;
+                padding: 0.45rem 0.75rem;
+                border-left: 0.2rem solid var(--yellow);
+                background: var(--surface);
+            }
+
+            .trace__point {
+                color: var(--yellow);
+            }
+
+            .trace__value {
+                overflow-wrap: anywhere;
+            }
+		</style>
+	</head>
+	<body class="page">
+		<a class="skip" href="#deck">Skip to presentation</a>
+		<div class="shell">
+			<header class="topbar">
+				<span class="mark" aria-hidden="true">JS</span>
+				<span class="repo"><span class="repo__owner">hackyourfuture</span> / intro-javascript-week3</span>
+				<span class="topbar__spacer"></span>
+				<span class="badge">● Node.js workshop</span>
+				<span class="badge">Week 3</span>
+			</header>
+
+			<main class="deck" id="deck" aria-live="polite">
+				<section class="slide slide--center slide--active" data-topic="welcome" data-notes="Welcome to Week 3. Keep using Node.js and your editor. Arrow keys or Space move through slides; N opens presenter notes; F toggles fullscreen; Home and End jump to the first and last slide. The interface follows the previous two decks.">
+                    <div class="slide__inner">
+                        <h1 class="slide__title slide__title--welcome"><span class="slide__language"><span class="accent">J</span>ava<span class="accent">S</span>cript</span><br /><span class="slide__tagline">makes decisions computable.</span></h1>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="learning-goals" data-notes="Ask trainees which topics they recognise from the preparation. Use their answers to set the pace. The official session plan excludes forEach, map, filter, and reduce; all iteration today uses for loops.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Learning goals</h2>
+                        <ul class="slide__list slide__list--compact slide__list--center"><li>Read and change object properties using dot and bracket notation.</li><li>Store real-world records in an array of objects.</li><li>Use <code><span class="code__function">push</span></code>, <code><span class="code__function">pop</span></code>, <code><span class="code__function">shift</span></code>, <code><span class="code__function">unshift</span></code>, and <code><span class="code__function">includes</span></code>.</li><li>Use the <code>.<span class="code__function">splice</span>()</code> method.</li><li>Visit array items with <code><span class="code__function">indexOf</span></code>.</li><li>Trace function calls and explain where execution resumes.</li></ul>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="agenda" data-notes="Suggested timings to match the Week 2 workshop, not timings supplied by the official plan. Start at 12:15, break at 14:00, resume at 14:30, and finish at 16:00. Give objects about an hour and arrays about 45 minutes. After the break, allow 50 minutes for the call stack and function calls, followed by 30 minutes of CodeWars practice and 10 minutes for recap. Adjust walkthroughs to the group.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Workshop agenda</h2>
+                        <div class="timeline timeline--agenda"><div class="timeline__row"><span class="timeline__time">12:15</span><span>Recap &amp; objects</span></div><div class="timeline__row"><span class="timeline__time">13:15</span><span>Arrays &amp; array methods</span></div><div class="timeline__row"><span class="timeline__time">14:00</span><span>Break</span></div><div class="timeline__row"><span class="timeline__time">14:30</span><span>Call stack &amp; function calls</span></div><div class="timeline__row"><span class="timeline__time">15:20</span><span>CodeWars practice</span></div><div class="timeline__row"><span class="timeline__time">15:50</span><span>Recap &amp; assignment</span></div></div>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="recap" data-notes="Output: Hello! three times. Parameters are message and times; arguments are &quot;Hello!&quot; and 3. Ask a trainee to explain the loop condition and increment. The local i variable is in the loop block. This connects functions and loops to today’s data structures.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">A quick Week 2 recap</h2>
+                        <pre class="code"><code><span class="code__keyword">function</span> <span class="code__function">repeatMessage</span>(<span class="code__variable">message</span>, <span class="code__variable">times</span>) {
+  <span class="code__keyword">for</span> (<span class="code__keyword">let</span> <span class="code__variable">i</span> = <span class="code__number">0</span>; <span class="code__variable">i</span> &lt; <span class="code__variable">times</span>; <span class="code__variable">i</span>++) {
+    <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">message</span>);
+  }
+}
+
+<span class="code__function">repeatMessage</span>(<span class="code__string">&quot;Hello!&quot;</span>, <span class="code__number">3</span>);</code></pre><p class="slide__lead slide__lead--recap">What is the parameter? The argument? The output?</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="challenge-loop-start" data-notes="Give pairs 60 seconds to predict, explain, and fix before running. Answer: nothing prints. The first check is 3 &lt; 3, which is false, so the body never runs. Fix: start i at 0. The corrected loop prints Hello! three times, for i = 0, 1, 2.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Why does nothing print?</h2>
+                        <pre class="code"><code><span class="code__keyword">for</span> (<span class="code__keyword">let</span> <span class="code__variable">i</span> = <span class="code__number">3</span>; <span class="code__variable">i</span> &lt; <span class="code__number">3</span>; <span class="code__variable">i</span>++) {
+  <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__string">&quot;Hello!&quot;</span>);
+}</code></pre>
+                        
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="challenge-loop-infinite" data-notes="Give pairs 60 seconds to trace i by hand. Answer: i stays 0, so i &lt; 3 stays true and Hello! prints indefinitely. Fix: add i++ inside the loop after console.log. Run only the corrected version, which prints three times. If someone runs the original in Node.js, Ctrl+C stops it.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Will this loop ever stop?</h2>
+                        <pre class="code"><code><span class="code__keyword">let</span> <span class="code__variable">i</span> = <span class="code__number">0</span>;
+
+<span class="code__keyword">while</span> (<span class="code__variable">i</span> &lt; <span class="code__number">3</span>) {
+  <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__string">&quot;Hello!&quot;</span>);
+}</code></pre>
+                        
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="challenge-loop-const" data-notes="Ask students to vote zero, one, or three, then explain to a partner. Answer: Hello! prints once. Initialization and the first condition succeed. After the body, i++ tries to reassign the const variable and throws a TypeError: Assignment to constant variable. Fix: use let instead of const for this changing counter.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">What's going on?</h2>
+                        <pre class="code"><code><span class="code__keyword">for</span> (<span class="code__keyword">const</span> <span class="code__variable">i</span> = <span class="code__number">0</span>; <span class="code__variable">i</span> &lt; <span class="code__number">3</span>; <span class="code__variable">i</span>++) {
+  <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__string">&quot;Hello!&quot;</span>);
+}</code></pre>
+                        
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="challenge-function-scope" data-notes="Give pairs 90 seconds to predict and propose a fix. Answer: ReferenceError: message is not defined. The variable message belongs to start. greet is declared outside start and cannot read its local variables just because start calls it. Fix: declare function greet(message) and call greet(message) inside start. The corrected version prints Hello! once.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Why does it crash?</h2>
+                        <pre class="code"><code><span class="code__keyword">function</span> <span class="code__function">greet</span>() {
+  <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">message</span>);
+}
+
+<span class="code__keyword">function</span> <span class="code__function">start</span>() {
+  <span class="code__keyword">const</span> <span class="code__variable">message</span> = <span class="code__string">&quot;Hello!&quot;</span>;
+  <span class="code__function">greet</span>();
+}
+
+<span class="code__function">start</span>();</code></pre>
+                        
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="challenge-function-return" data-notes="Ask students to predict the output, then name the missing keyword. Answer: undefined. This function does not crash; it calculates 8 but does not return it. A function without an explicit return value returns undefined. Fix: return number * 2; inside double. The corrected program prints 8. Contrast this with console.log, which displays a value rather than returning it to the caller.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Why is the result undefined?</h2>
+                        <pre class="code"><code><span class="code__keyword">function</span> <span class="code__function">double</span>(<span class="code__variable">number</span>) {
+  <span class="code__variable">number</span> * <span class="code__number">2</span>;
+}
+
+<span class="code__keyword">const</span> <span class="code__variable">result</span> = <span class="code__function">double</span>(<span class="code__number">4</span>);
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">result</span>);</code></pre>
+                        
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="setup" data-notes="Use the same editor and Node.js setup as Weeks 1 and 2. Run node week3.js from the folder containing the file. Use separate files or replace the previous example to avoid duplicate const declarations when copying snippets.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Your Week 3 file</h2>
+                        <pre class="code"><code><span class="code__comment">// Create week3.js in your workshop folder.</span>
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__string">&quot;Ready for Week 3!&quot;</span>);</code></pre><pre class="code"><code><span class="code__command">node week3.js</span></code></pre>
+                    </div>
+                </section>
+
+				<section class="slide slide--center" data-topic="objects" data-notes="Start with real-world records. Ask what information a product or user needs. An object connects named properties to their values; an array keeps items in a numbered sequence. Today we will combine both.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Objects</h2>
+                        <p class="slide__lead slide__lead--recap">Keep related information in one value.</p><ul class="slide__list slide__list--compact slide__list--center"><li>A user: <code><span class="code__variable">name</span></code>, <code><span class="code__variable">age</span></code>, <code><span class="code__variable">role</span></code>.</li><li>A product: <code><span class="code__variable">name</span></code>, <code><span class="code__variable">price</span></code>, <code><span class="code__variable">inStock</span></code>.</li><li>A house listing: <code><span class="code__variable">address</span></code>, <code><span class="code__variable">rent</span></code>, <code><span class="code__variable">rooms</span></code>.</li></ul>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="object-syntax" data-notes="An object groups related information into properties. Each property has a key and a value. objectName, key, and value are placeholders in this general syntax pattern. const declares the variable; it does not freeze the object properties. Curly braces enclose the object, a colon separates each key from its value, and commas separate properties. The next slide shows a concrete example.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">How to write an object</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">objectName</span> = {
+  <span class="code__variable">key</span>: <span class="code__variable">value</span>
+};</code></pre>
+                        <ul class="slide__list slide__list--compact slide__list--center">
+                            <li><span class="term"><span class="code__keyword">const</span> <span class="code__variable">objectName</span></span> declares a variable for the object.</li>
+                            <li><span class="term">{ }</span> contain the object's properties.</li>
+                            <li>Each property is a <span class="term"><span class="code__variable">key</span>: <span class="code__variable">value</span></span> pair.</li>
+                            <li>Use a colon between <code><span class="code__variable">key</span></code> and <code><span class="code__variable">value</span></code>, and commas between properties.</li>
+                        </ul>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="key-value" data-notes="Point out braces, colons, and commas. name, age, and role are property keys. The corresponding values are a string, a number, and a string. The object can hold different kinds of values. Ask trainees to identify each pair before running the example.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Keys &amp; values</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">user</span> = {
+  <span class="code__variable">name</span>: <span class="code__string">&quot;Emil&quot;</span>,
+  <span class="code__variable">age</span>: <span class="code__number">25</span>,
+  <span class="code__variable">role</span>: <span class="code__string">&quot;Teacher&quot;</span>,
+};
+
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">user</span>);</code></pre><p class="slide__lead slide__lead--recap"><span class="term"><span class="code__variable">name</span></span> is a key. <span class="term"><span class="code__string">"Emil"</span></span> is its value.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="object-value-types" data-notes="Object properties can hold any JavaScript value. Start with the familiar string, number, and boolean, then point out the array, nested object, and function. null represents an intentional absence of a value; undefined commonly means no value has been assigned.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Objects can hold any value</h2>
+                        <pre class="code code--compact"><code><span class="code__keyword">const</span> <span class="code__variable">user</span> = {
+  <span class="code__variable">name</span>: <span class="code__string">&quot;Emil&quot;</span>,                             <span class="code__comment">// string</span>
+  <span class="code__variable">age</span>: <span class="code__number">25</span>,                                  <span class="code__comment">// number</span>
+  <span class="code__variable">isTeacher</span>: <span class="code__keyword">true</span>,                          <span class="code__comment">// boolean</span>
+  <span class="code__variable">skills</span>: [<span class="code__string">&quot;JavaScript&quot;</span>],                   <span class="code__comment">// array</span>
+  <span class="code__variable">address</span>: { city: <span class="code__string">&quot;Copenhagen&quot;</span> },          <span class="code__comment">// nested object</span>
+  <span class="code__variable">greet</span>: <span class="code__keyword">function</span> () { <span class="code__keyword">return</span> <span class="code__string">&quot;Hi!&quot;</span>; },     <span class="code__comment">// function</span>
+  <span class="code__variable">manager</span>: <span class="code__keyword">null</span>,                            <span class="code__comment">// null</span>
+  <span class="code__variable">nickname</span>: <span class="code__keyword">undefined</span>,                      <span class="code__comment">// undefined</span>
+};</code></pre>
+                        <p class="slide__lead slide__lead--recap">Mix value types in one object.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="property-access" data-notes="Output: Emil, Emil. Prefer user.name for a known key that is a valid JavaScript identifier: it is easier to read. Writing the key as &quot;name&quot; in the object does not require bracket notation when accessing it. user[&quot;name&quot;] is equally valid and returns the same value. Use brackets when a key contains spaces or punctuation such as a hyphen, starts with a digit, or comes from a variable or expression. Brackets are necessary for dynamic keys, not an inferior form of access.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">How to read</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">user</span> = {
+  <span class="code__string">&quot;name&quot;</span>: <span class="code__string">&quot;Emil&quot;</span>,
+  <span class="code__variable">age</span>: <span class="code__number">25</span>,
+};
+
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">user</span>.<span class="code__variable">name</span>);
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">user</span>[<span class="code__string">&quot;name&quot;</span>]);</code></pre><p class="slide__lead slide__lead--recap">Prefer dot notation for a known key that is a valid JavaScript identifier.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="bracket-keys" data-notes="Output: 8500, Nørrebrogade 10, and undefined. Use brackets for a key with spaces or a key stored in a variable. listing[property] reads the variable property, whose value is &quot;address&quot;. listing.property instead looks for a key literally named &quot;property&quot;, which does not exist. A missing property on an existing object returns undefined.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">When to use brackets</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">listing</span> = {
+  <span class="code__variable">address</span>: <span class="code__string">&quot;Nørrebrogade 10&quot;</span>,
+  <span class="code__string">&quot;monthly rent&quot;</span>: <span class="code__number">8500</span>,
+};
+
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">listing</span>[<span class="code__string">&quot;monthly rent&quot;</span>]);
+
+<span class="code__keyword">const</span> <span class="code__variable">property</span> = <span class="code__string">&quot;address&quot;</span>;
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">listing</span>[<span class="code__variable">property</span>]); <span class="code__comment">// &quot;Nørrebrogade 10&quot;</span>
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">listing</span>.<span class="code__variable">property</span>);  <span class="code__comment">// undefined</span></code></pre><p class="slide__lead slide__lead--recap">Use brackets for keys with spaces or keys stored in variables.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="change-properties" data-notes="The final object has name: &quot;Emil&quot; and age: 26. Updating an existing key changes its value. Assigning a new key adds it. delete removes a property. Ask trainees to log the object after each step to observe the difference.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Add. Update. Delete.</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">user</span> = { <span class="code__variable">name</span>: <span class="code__string">&quot;Emil&quot;</span>, <span class="code__variable">age</span>: <span class="code__number">25</span> };
+
+<span class="code__variable">user</span>.<span class="code__variable">age</span> = <span class="code__number">26</span>;
+<span class="code__variable">user</span>.<span class="code__variable">lastName</span> = <span class="code__string">&quot;Bay&quot;</span>;
+<span class="code__keyword">delete</span> <span class="code__variable">user</span>.<span class="code__variable">lastName</span>;
+
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">user</span>);</code></pre><p class="slide__lead slide__lead--recap">The same object now has a different <code><span class="code__variable">age</span></code>.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="const-objects" data-notes="Output: 35 and 3. The bindings still point to the same object and array. product = another object or topics = another array would throw. This distinction applies to arrays too. Prefer const when the binding is not reassigned.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">const &amp; objects</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">product</span> = { <span class="code__variable">name</span>: <span class="code__string">&quot;Notebook&quot;</span>, <span class="code__variable">price</span>: <span class="code__number">30</span> };
+<span class="code__variable">product</span>.<span class="code__variable">price</span> = <span class="code__number">35</span>;
+
+<span class="code__keyword">const</span> <span class="code__variable">topics</span> = [<span class="code__string">&quot;HTML&quot;</span>, <span class="code__string">&quot;CSS&quot;</span>];
+<span class="code__variable">topics</span>.<span class="code__function">push</span>(<span class="code__string">&quot;JavaScript&quot;</span>);
+
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">product</span>.<span class="code__variable">price</span>, <span class="code__variable">topics</span>.<span class="code__variable">length</span>);</code></pre><p class="slide__lead slide__lead--recap"><span class="term"><span class="code__keyword">const</span></span> prevents reassignment. Contents can change.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="nested-objects" data-notes="Output: JavaScript 1 and computers. user.classes is an array, so [0] reads its first item. user.hobbies is an object, so .favourite reads a property. Ask trainees to say the steps aloud. Nested values are still ordinary arrays and objects.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Values can be nested</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">user</span> = {
+  <span class="code__variable">name</span>: <span class="code__string">&quot;Emil&quot;</span>,
+  <span class="code__variable">classes</span>: [<span class="code__string">&quot;JavaScript 1&quot;</span>, <span class="code__string">&quot;JavaScript 2&quot;</span>],
+  <span class="code__variable">hobbies</span>: { <span class="code__variable">favourite</span>: <span class="code__string">&quot;computers&quot;</span> },
+};
+
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">user</span>.<span class="code__variable">classes</span>[<span class="code__number">0</span>]);
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">user</span>.<span class="code__variable">hobbies</span>.<span class="code__variable">favourite</span>);</code></pre><p class="slide__lead slide__lead--recap">Read one level at a time: object → value → property or index.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="exercise-profile" data-notes="Allow 7–8 minutes. Ask trainees to run after each step. Check that skills is an array and that the dynamic property lookup uses profile[property], not profile.property.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Exercise: your profile</h2>
+                        <article class="card card--exercise"><ol class="slide__list slide__list--compact slide__list--center"><li>Create an object with your <code><span class="code__variable">name</span></code>, <code><span class="code__variable">age</span></code>, and an array of <code><span class="code__variable">skills</span></code>.</li><li>Read your <code><span class="code__variable">name</span></code> using both dot and bracket notation.</li><li>Store <code><span class="code__string">"age"</span></code> in a variable, then read that property.</li><li>Add a <code><span class="code__variable">city</span></code>, update the <code><span class="code__variable">age</span></code>, then <code><span class="code__keyword">delete</span></code> the <code><span class="code__variable">city</span></code>.</li><li>Print your first skill.</li></ol></article>
+                    </div>
+                </section>
+
+				
+
+				<section class="slide" data-topic="array-of-objects" data-notes="Output: Fowad. Compare this with separate names and ages arrays: the corresponding fields can drift apart when one list changes. An array of objects groups each record’s fields together. students[0] is an object; .name reads its name property.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">A list of records</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">students</span> = [
+  { <span class="code__variable">name</span>: <span class="code__string">&quot;Fowad&quot;</span>, <span class="code__variable">age</span>: <span class="code__number">32</span> },
+  { <span class="code__variable">name</span>: <span class="code__string">&quot;Emil&quot;</span>, <span class="code__variable">age</span>: <span class="code__number">25</span> },
+  { <span class="code__variable">name</span>: <span class="code__string">&quot;Zoey&quot;</span>, <span class="code__variable">age</span>: <span class="code__number">28</span> },
+];
+
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">students</span>[<span class="code__number">0</span>].<span class="code__variable">name</span>);</code></pre><p class="slide__lead slide__lead--recap">The array stores records. Each object keeps one person’s data together.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="array-loop" data-notes="Output: Fowad then Zoey. i starts at 0 and stops before students.length. currentStudent names the object at the current index. Have trainees explain this loop rather than only listening. Ask what changes when a third student is added.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Visit every record</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">students</span> = [{ <span class="code__variable">name</span>: <span class="code__string">&quot;Fowad&quot;</span> }, { <span class="code__variable">name</span>: <span class="code__string">&quot;Zoey&quot;</span> }];
+
+<span class="code__keyword">for</span> (<span class="code__keyword">let</span> <span class="code__variable">i</span> = <span class="code__number">0</span>; <span class="code__variable">i</span> &lt; <span class="code__variable">students</span>.<span class="code__variable">length</span>; <span class="code__variable">i</span>++) {
+  <span class="code__keyword">const</span> <span class="code__variable">currentStudent</span> = <span class="code__variable">students</span>[<span class="code__variable">i</span>];
+  <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">currentStudent</span>.<span class="code__variable">name</span>);
+}</code></pre><p class="slide__lead slide__lead--recap">Let a neighbour explain the loop, from the first index to the last.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="exercise-products" data-notes="Allow 8 minutes. Use real product examples. Encourage a named currentProduct variable and an if condition inside the for loop. Do not introduce array transformation methods. An empty array should naturally produce no output.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Exercise: product list</h2>
+                        <article class="card card--exercise"><ol class="slide__list slide__list--compact slide__list--center"><li>Create three products with <code><span class="code__variable">name</span></code>, <code><span class="code__variable">price</span></code>, and <code><span class="code__variable">inStock</span></code> properties.</li><li>Store them in an array.</li><li>Use a <code><span class="code__keyword">for</span></code> loop to print each product <code><span class="code__variable">name</span></code> and <code><span class="code__variable">price</span></code>.</li><li>Print only products whose <code><span class="code__variable">inStock</span></code> value is <code><span class="code__keyword">true</span></code>.</li></ol></article>
+                    </div>
+                </section>
+
+				
+
+				<section class="slide slide--center" data-topic="arrays" data-notes="Move from object records to the operations on their containing array. Ask trainees to recall indexing and length from Week 1. Every array method today is called on the array using dot notation.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Arrays continued</h2>
+                        <p class="slide__lead slide__lead--recap">Add items. Remove items. Check what is already there.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="push-pop" data-notes="After push: [&quot;Fowad&quot;, &quot;Emil&quot;, &quot;Zoey&quot;], length 3. After pop: [&quot;Fowad&quot;, &quot;Emil&quot;], removed &quot;Zoey&quot;. Both methods change the original array. push returns the new length; pop returns the removed item. pop on an empty array returns undefined.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">At the end</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">names</span> = [<span class="code__string">&quot;Fowad&quot;</span>, <span class="code__string">&quot;Emil&quot;</span>];
+
+<span class="code__keyword">const</span> <span class="code__variable">length</span> = <span class="code__variable">names</span>.<span class="code__function">push</span>(<span class="code__string">&quot;Zoey&quot;</span>);
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">names</span>, <span class="code__variable">length</span>);
+
+<span class="code__keyword">const</span> <span class="code__variable">removed</span> = <span class="code__variable">names</span>.<span class="code__function">pop</span>();
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">names</span>, <span class="code__variable">removed</span>);</code></pre><p class="slide__lead slide__lead--recap"><span class="term"><span class="code__function">push</span></span> adds. <span class="term"><span class="code__function">pop</span></span> removes.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="exercise-push-pop" data-notes="Give 5 minutes to practise push and pop after the explanation. Start with Emil and Zoey. push adds Fowad at the end and returns 3. pop removes Fowad and returns that item. Ask trainees to print the array and return value after each operation.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Exercise: at the end</h2>
+                        <article class="card card--exercise"><ol class="slide__list slide__list--compact slide__list--center"><li>Start with <code>[<span class="code__string">"Emil"</span>, <span class="code__string">"Zoey"</span>]</code>.</li><li>Try <code><span class="code__variable">names</span>.<span class="code__function">push</span>(<span class="code__string">"Fowad"</span>)</code>. Print the array and return value.</li><li>Try <code><span class="code__variable">names</span>.<span class="code__function">pop</span>()</code>. Print the array and return value.</li><li>Explain which end changes and how <code><span class="code__variable">length</span></code> changes.</li></ol></article>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="shift-unshift" data-notes="After unshift: [&quot;Fowad&quot;, &quot;Emil&quot;, &quot;Zoey&quot;], length 3. After shift: [&quot;Emil&quot;, &quot;Zoey&quot;], removed &quot;Fowad&quot;. Other items move to new indexes. shift on an empty array returns undefined. Explain both methods before the practice exercise on the next slide.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">At the beginning</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">names</span> = [<span class="code__string">&quot;Emil&quot;</span>, <span class="code__string">&quot;Zoey&quot;</span>];
+
+<span class="code__keyword">const</span> <span class="code__variable">length</span> = <span class="code__variable">names</span>.<span class="code__function">unshift</span>(<span class="code__string">&quot;Fowad&quot;</span>);
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">names</span>, <span class="code__variable">length</span>);
+
+<span class="code__keyword">const</span> <span class="code__variable">removed</span> = <span class="code__variable">names</span>.<span class="code__function">shift</span>();
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">names</span>, <span class="code__variable">removed</span>);</code></pre><p class="slide__lead slide__lead--recap"><span class="term"><span class="code__function">unshift</span></span> adds. <span class="term"><span class="code__function">shift</span></span> removes.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="exercise-shift-unshift" data-notes="Give 5 minutes to practise the methods explained on the previous slide. Ask trainees to predict each result before running. unshift adds at the beginning and returns the new length. shift removes the first item and returns it. The longer word in each pair—push/pop and unshift/shift—makes the array longer.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Exercise: at the beginning</h2>
+                        <article class="card card--exercise"><ol class="slide__list slide__list--compact slide__list--center"><li>Start with <code>[<span class="code__string">"Emil"</span>, <span class="code__string">"Zoey"</span>]</code>.</li><li>Try <code><span class="code__variable">names</span>.<span class="code__function">unshift</span>(<span class="code__string">"Fowad"</span>)</code>. Print the array and return value.</li><li>Try <code><span class="code__variable">names</span>.<span class="code__function">shift</span>()</code>. Print the array and return value.</li><li>Explain which end changes and how <code><span class="code__variable">length</span></code> changes.</li></ol></article>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="array-methods" data-notes="Use a physical line of people or sticky notes to model the array. Ask which method joins the front or leaves the end. Each array operation is separate from the function call stack introduced later; the stack uses a similar last-in, first-out pattern but is managed by JavaScript.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Four methods to remember</h2>
+                        <div class="grid"><article class="card"><p class="card__label">Beginning</p><p class="card__copy"><span class="term"><span class="code__function">unshift</span>(<span class="code__variable">item</span>)</span> → add<br /><span class="term"><span class="code__function">shift</span>()</span> → remove</p></article><article class="card"><p class="card__label">End</p><p class="card__copy"><span class="term"><span class="code__function">push</span>(<span class="code__variable">item</span>)</span> → add<br /><span class="term"><span class="code__function">pop</span>()</span> → remove</p></article></div><p class="slide__lead slide__lead--recap">Adding returns <code><span class="code__variable">length</span></code>; removing returns an <code><span class="code__variable">item</span></code>.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="splice-explained" data-notes="The second line is a syntax explanation, not runnable JavaScript. The first argument is the starting index, counted from 0. The second argument is the number of items to remove, not an ending index. Use the next slide for a runnable example.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">What does splice do?</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">array</span> = [<span class="code__string">&quot;Emil&quot;</span>, <span class="code__string">&quot;Ahmad&quot;</span>, <span class="code__string">&quot;Zoey&quot;</span>];
+
+<span class="code__variable">array</span>.<span class="code__function">splice</span>(from which position, how many items)</code></pre>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="splice" data-notes="Explain removal before the next exercise. splice(start, deleteCount) changes the original array. Indexes start at 0: index 1 is Ahmad. The second argument is how many items to remove, not an ending index. After splice, names is Emil and Zoey; removed is an array containing Ahmad. Unlike pop and shift, splice returns an array of removed items. Remaining items move to fill the gap. splice can also insert or replace items, but this example focuses on removal.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Remove an item with splice</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">names</span> = [<span class="code__string">&quot;Emil&quot;</span>, <span class="code__string">&quot;Ahmad&quot;</span>, <span class="code__string">&quot;Zoey&quot;</span>];
+
+<span class="code__keyword">const</span> <span class="code__variable">removed</span> = <span class="code__variable">names</span>.<span class="code__function">splice</span>(<span class="code__number">1</span>, <span class="code__number">1</span>);
+
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">names</span>);   <span class="code__comment">// [&quot;Emil&quot;, &quot;Zoey&quot;]</span>
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">removed</span>); <span class="code__comment">// [&quot;Ahmad&quot;]</span></code></pre>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="index-of" data-notes="indexOf searches for a value and returns the index of its first match. Indexes start at 0. Ahmad is at index 1; Amina is absent, so the result is -1. indexOf does not change the array. String matching is case sensitive. To combine this with splice, first check that the index is not -1: splice(-1, 1) would remove the last item. Students may use indexOf for finding the name, while the next exercise also provides practice with a for loop.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Find a position with indexOf</h2>
+                        <pre class="code"><code><span class="code__keyword">const</span> <span class="code__variable">names</span> = [<span class="code__string">&quot;Emil&quot;</span>, <span class="code__string">&quot;Ahmad&quot;</span>, <span class="code__string">&quot;Zoey&quot;</span>];
+
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">names</span>.<span class="code__function">indexOf</span>(<span class="code__string">&quot;Ahmad&quot;</span>)); <span class="code__comment">// 1</span>
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">names</span>.<span class="code__function">indexOf</span>(<span class="code__string">&quot;Amina&quot;</span>)); <span class="code__comment">// -1</span>
+
+<span class="code__keyword">const</span> <span class="code__variable">index</span> = <span class="code__variable">names</span>.<span class="code__function">indexOf</span>(<span class="code__string">&quot;Ahmad&quot;</span>);
+<span class="code__keyword">if</span> (<span class="code__variable">index</span> !== <span class="code__number">-1</span>) {
+  <span class="code__variable">names</span>.<span class="code__function">splice</span>(<span class="code__variable">index</span>, <span class="code__number">1</span>);
+}
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__variable">names</span>); <span class="code__comment">// [&quot;Emil&quot;, &quot;Zoey&quot;]</span></code></pre>
+                        <ul class="slide__list slide__list--compact slide__list--center">
+                            <li>Returns <code><span class="code__number">-1</span></code> if the item is absent.</li>
+                        </ul>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="exercise-splice" data-notes="Allow 5–7 minutes. Find the position with names.indexOf(nameToRemove). Check that it is not -1 before calling names.splice(index, 1). Expected remaining names: Amina, Emil, Ahmad. Ask trainees to log the removed array too. An absent name returns -1, so skip splice and leave the array unchanged. Leave the solution for live coding.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Exercise: remove a name</h2>
+                        <article class="card card--exercise">
+                            <ol class="slide__list slide__list--compact slide__list--center">
+                                <li>Create <code><span class="code__variable">names</span> = [<span class="code__string">&quot;Amina&quot;</span>, <span class="code__string">&quot;Emil&quot;</span>, <span class="code__string">&quot;Zoey&quot;</span>, <span class="code__string">&quot;Ahmad&quot;</span>]</code>.</li>
+                                <li>Set <code><span class="code__variable">nameToRemove</span></code> to <code><span class="code__string">&quot;Zoey&quot;</span></code>.</li>
+                                <li>Use <code><span class="code__function">indexOf</span></code> to find the name's position.</li>
+                                <li>If the position is not <code><span class="code__number">-1</span></code>, use <code><span class="code__function">splice</span></code> to remove that item.</li>
+                                <li>Print the remaining names and the array of removed items.</li>
+                                <li>Try a name that is absent. The array should stay unchanged.</li>
+                            </ol>
+                        </article>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="exercise-includes" data-notes="Allow 4 minutes. Answers: true, false, false, true. includes returns a boolean and does not change the array. String matching is case sensitive. Number 2 and string &quot;2&quot; are different values. Explain the result rather than presenting includes as a loop replacement.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">.includes() method</h2>
+                        <article class="card card--exercise"><ol class="slide__list slide__list--compact slide__list--center"><li>Create the array <code>[<span class="code__string">"HTML"</span>, <span class="code__string">"CSS"</span>, <span class="code__string">"JavaScript"</span>]</code>.</li><li>Predict and run <code><span class="code__function">includes</span>(<span class="code__string">"CSS"</span>)</code> and <code><span class="code__function">includes</span>(<span class="code__string">"css"</span>)</code>.</li><li>Try <code>[<span class="code__number">1</span>, <span class="code__number">2</span>, <span class="code__number">3</span>].<span class="code__function">includes</span>(<span class="code__string">"2"</span>)</code> and <code>.<span class="code__function">includes</span>(<span class="code__number">2</span>)</code>.</li><li>Does <code><span class="code__variable">includes</span></code> change the array? What type does it return?</li></ol></article>
+                    </div>
+                </section>
+
+				
+
+				
+
+				
+
+				
+
+				<section class="slide" data-topic="recap-object-properties" data-notes="Review keys and values. Ask which property user[key] reads and why user.key is different. All three name accesses print Emil. user.key reads a property literally named key, which is absent.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Recap: objects &amp; keys</h2>
+                        <p class="slide__lead">An object keeps related values together as key: value pairs.</p>
+                        <pre class="code"><code><span class="code__keyword">const</span> user = { name: <span class="code__string">&quot;Emil&quot;</span>, age: <span class="code__number">25</span> };
+<span class="code__keyword">const</span> key = <span class="code__string">&quot;name&quot;</span>;
+
+console.<span class="code__function">log</span>(user.name);    <span class="code__comment">// Emil</span>
+console.<span class="code__function">log</span>(user[<span class="code__string">&quot;name&quot;</span>]); <span class="code__comment">// Emil</span>
+console.<span class="code__function">log</span>(user[key]);    <span class="code__comment">// Emil</span>
+console.<span class="code__function">log</span>(user.key);     <span class="code__comment">// undefined</span></code></pre>
+                        <p class="card__copy">Use dots for a known key. Use brackets when the key is stored in a variable or contains spaces.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="recap-changing-properties" data-notes="Ask students to identify the update, addition, and deletion. The binding is not reassigned. Do not imply that const makes an object immutable.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Recap: change an object</h2>
+                        <p class="slide__lead">Assign a value to update a property or add a new one. Use delete to remove a property.</p>
+                        <pre class="code"><code><span class="code__keyword">const</span> user = { name: <span class="code__string">&quot;Emil&quot;</span>, age: <span class="code__number">25</span> };
+
+user.age = <span class="code__number">26</span>;
+user.city = <span class="code__string">&quot;Copenhagen&quot;</span>;
+console.<span class="code__function">log</span>(user.city); <span class="code__comment">// Copenhagen</span>
+
+<span class="code__keyword">delete</span> user.city;
+console.<span class="code__function">log</span>(user.age);  <span class="code__comment">// 26</span>
+console.<span class="code__function">log</span>(user.city); <span class="code__comment">// undefined</span></code></pre>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="recap-records-loop" data-notes="Trace i = 0 and i = 1. students[i] is one object, student.skills is an array, and student.skills[0] is its first item. With an empty students array the loop body never runs.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Recap: records &amp; loops</h2>
+                        <p class="slide__lead">An array can hold objects. Read the array item first, then its property.</p>
+                        <pre class="code"><code><span class="code__keyword">const</span> students = [
+  { name: <span class="code__string">&quot;Emil&quot;</span>, skills: [<span class="code__string">&quot;HTML&quot;</span>, <span class="code__string">&quot;CSS&quot;</span>] },
+  { name: <span class="code__string">&quot;Zoey&quot;</span>, skills: [<span class="code__string">&quot;JavaScript&quot;</span>] }
+];
+
+<span class="code__keyword">for</span> (<span class="code__keyword">let</span> i = <span class="code__number">0</span>; i &lt; students.length; i++) {
+  <span class="code__keyword">const</span> student = students[i];
+  console.<span class="code__function">log</span>(student.name, student.skills[<span class="code__number">0</span>]);
+}
+<span class="code__comment">// Emil HTML</span>
+<span class="code__comment">// Zoey JavaScript</span></code></pre>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="recap-array-ends" data-notes="Trace the array after each operation: Emil Zoey Amina; Emil Zoey; Ahmad Emil Zoey; Emil Zoey. Distinguish the returned value from the changed array.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Recap: array beginnings &amp; ends</h2>
+                        <p class="slide__lead">push / pop work at the end. unshift / shift work at the beginning.</p>
+                        <pre class="code"><code><span class="code__keyword">const</span> names = [<span class="code__string">&quot;Emil&quot;</span>, <span class="code__string">&quot;Zoey&quot;</span>];
+
+console.<span class="code__function">log</span>(names.<span class="code__function">push</span>(<span class="code__string">&quot;Amina&quot;</span>));    <span class="code__comment">// 3</span>
+console.<span class="code__function">log</span>(names.<span class="code__function">pop</span>());            <span class="code__comment">// Amina</span>
+console.<span class="code__function">log</span>(names.<span class="code__function">unshift</span>(<span class="code__string">&quot;Ahmad&quot;</span>)); <span class="code__comment">// 3</span>
+console.<span class="code__function">log</span>(names.<span class="code__function">shift</span>());          <span class="code__comment">// Ahmad</span>
+
+console.<span class="code__function">log</span>(names); <span class="code__comment">// [&quot;Emil&quot;, &quot;Zoey&quot;]</span></code></pre>
+                        <p class="card__copy">All four methods change the array. Adding returns the new length; removing returns the removed item.</p>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="recap-find-remove" data-notes="Review boolean versus index versus array return values. Search is case sensitive and number 2 differs from string 2. An absent name returns -1; calling splice(-1, 1) would remove the last item, so keep the guard. Ask what happens if the removal target is Amina.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Recap: find &amp; remove</h2>
+                        <p class="slide__lead">includes checks whether an item is present. indexOf finds its position.</p>
+                        <pre class="code"><code><span class="code__keyword">const</span> names = [<span class="code__string">&quot;Emil&quot;</span>, <span class="code__string">&quot;Ahmad&quot;</span>, <span class="code__string">&quot;Zoey&quot;</span>];
+console.<span class="code__function">log</span>(names.<span class="code__function">includes</span>(<span class="code__string">&quot;Ahmad&quot;</span>)); <span class="code__comment">// true</span>
+console.<span class="code__function">log</span>(names.<span class="code__function">indexOf</span>(<span class="code__string">&quot;Amina&quot;</span>));  <span class="code__comment">// -1</span>
+
+<span class="code__keyword">const</span> index = names.<span class="code__function">indexOf</span>(<span class="code__string">&quot;Ahmad&quot;</span>);
+<span class="code__keyword">if</span> (index !== -<span class="code__number">1</span>) {
+  <span class="code__keyword">const</span> removed = names.<span class="code__function">splice</span>(index, <span class="code__number">1</span>);
+  console.<span class="code__function">log</span>(removed); <span class="code__comment">// [&quot;Ahmad&quot;]</span>
+}
+console.<span class="code__function">log</span>(names); <span class="code__comment">// [&quot;Emil&quot;, &quot;Zoey&quot;]</span></code></pre>
+                    </div>
+                </section>
+
+				
+
+
+				
+
+				<section class="slide" data-topic="practice-process" data-notes="Pair trainees for CodeWars practice. Let one person explain and the other type, then switch. If the website requires an account, pairs can use an existing account or practise the local exercise on the next slide. Keep the focus on understanding values and loops.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Solve one small step</h2>
+                        <ol class="slide__list slide__list--compact slide__list--center"><li>Read the expected input and output.</li><li>Write down one example by hand.</li><li>Find the item, key, or loop condition you need.</li><li>Implement one step and run the tests.</li><li>Explain a failed test before changing the code.</li></ol>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="exercise-add-property" data-notes="A local exercise inspired by adding a property to every object; it is not presented as the exact CodeWars kata specification. Allow 5–7 minutes if helpful. The function changes existing objects. An empty array needs no special case because the loop condition is false immediately.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Exercise: mark students</h2>
+                        <article class="card card--exercise"><ol class="slide__list slide__list--compact slide__list--center"><li>Create an array containing two student objects.</li><li>Write a function called <code><span class="code__function">markStudents</span>(<span class="code__variable">students</span>)</code>.</li><li>Use a <code><span class="code__keyword">for</span></code> loop to add <code><span class="code__variable">isStudent</span>: <span class="code__keyword">true</span></code> to every object.</li><li>Print the array after calling your function.</li><li>Check what happens with an empty array.</li></ol></article>
+                    </div>
+                </section>
+
+				
+
+				<section class="slide slide--center" data-topic="call-stack" data-notes="The call stack tracks active function calls. For this lesson use synchronous code only. Each new function call adds a frame on top. Returning or reaching the end removes that frame, and execution resumes in the caller. This is the main call-flow question from the official session plan.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">The call stack</h2>
+                        <p class="slide__lead slide__lead--recap">Which function is running?<br />Where does execution continue when it finishes?</p>
+                    </div>
+                </section>
+
+
+				<section class="slide" data-topic="simple-stack" data-notes="Output: a. In this example a calls b but ignores its return value. a then returns its own string, which console.log prints. For the diagram we focus on our named functions and omit console.log and the top-level execution frame.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Follow two calls</h2>
+                        <pre class="code"><code><span class="code__keyword">function</span> <span class="code__function">a</span>() {
+  <span class="code__function">b</span>();
+  <span class="code__keyword">return</span> <span class="code__string">&quot;a&quot;</span>;
+}
+<span class="code__keyword">function</span> <span class="code__function">b</span>() {
+  <span class="code__keyword">return</span> <span class="code__string">&quot;b&quot;</span>;
+}
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__function">a</span>());</code></pre><p class="slide__lead slide__lead--recap">When <code><span class="code__function">b</span></code> returns, <code><span class="code__function">a</span></code> resumes at the next line.</p>
+                    </div>
+                </section>
+
+
+				<section class="slide" data-topic="call-versus-return" data-notes="Output: 25. The stack of our functions goes [makeTotal], [makeTotal, double], [makeTotal], []. After double returns 20, assignment to total completes, and makeTotal returns 25. Ask trainees to name both the stack state and the value at each step.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Watch the return value</h2>
+                        <pre class="code"><code><span class="code__keyword">function</span> <span class="code__function">double</span>(<span class="code__variable">number</span>) {
+  <span class="code__keyword">return</span> <span class="code__variable">number</span> * <span class="code__number">2</span>;
+}
+<span class="code__keyword">function</span> <span class="code__function">makeTotal</span>(<span class="code__variable">price</span>) {
+  <span class="code__keyword">const</span> <span class="code__variable">total</span> = <span class="code__function">double</span>(<span class="code__variable">price</span>);
+  <span class="code__keyword">return</span> <span class="code__variable">total</span> + <span class="code__number">5</span>;
+}
+<span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__function">makeTotal</span>(<span class="code__number">10</span>));</code></pre><p class="slide__lead slide__lead--recap">A call pauses <code><span class="code__function">makeTotal</span></code>. A return supplies the value <code><span class="code__number">20</span></code>.</p>
+                    </div>
+                </section>
+
+				
+
+				<section class="slide" data-topic="exercise-call-stack" data-notes="Ask what prints and in what order before running. Defining greet and start does not run their bodies. The final start() call begins execution. start prints Before, then calls greet. start waits while greet prints Hello!. When greet finishes, execution returns to the next line in start, which prints After. Output: Before, Hello!, After, on separate lines. The call stack remembers where to continue: start is on it, greet is added during its call, greet leaves when it finishes, and then start leaves when it finishes. Focus on pausing and resuming before asking students to draw anything.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Follow a function call</h2>
+                        <pre class="code code--compact"><code><span class="code__keyword">function</span> <span class="code__function">greet</span>() {
+  <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__string">&quot;Hello!&quot;</span>);
+}
+
+<span class="code__keyword">function</span> <span class="code__function">start</span>() {
+  <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__string">&quot;Before&quot;</span>);
+  <span class="code__function">greet</span>();
+  <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__string">&quot;After&quot;</span>);
+}
+
+<span class="code__function">start</span>();</code></pre>
+                    </div>
+                </section>
+
+				
+
+				
+
+				
+
+				
+
+				
+
+				<section class="slide" data-topic="exercise-call-flow" data-notes="Output: A, B, C. Stack of our named functions: [first], [first, second], [first], []. first resumes at console.log(&quot;C&quot;) when second ends. No explicit return is required for a function to finish and leave the stack.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">One more prediction</h2>
+                        <pre class="code"><code><span class="code__keyword">function</span> <span class="code__function">first</span>() {
+  <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__string">&quot;A&quot;</span>);
+  <span class="code__function">second</span>();
+  <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__string">&quot;C&quot;</span>);
+}
+<span class="code__keyword">function</span> <span class="code__function">second</span>() {
+  <span class="code__variable">console</span>.<span class="code__function">log</span>(<span class="code__string">&quot;B&quot;</span>);
+}
+<span class="code__function">first</span>();</code></pre><p class="slide__lead slide__lead--recap">What prints? Where does <code><span class="code__function">first</span></code> resume?</p>
+                    </div>
+                </section>
+
+				
+
+				
+
+				<section class="slide" data-topic="loupe" data-notes="The session plan links Loupe as a call-flow visualizer. Demonstrate the simple a/b example with function declarations. Focus on the synchronous call stack for this lesson; event loop and asynchronous work are outside today’s scope. If Loupe cannot be opened, use the previous diagram.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Watch calls in Loupe</h2>
+                        <p class="slide__lead slide__lead--recap"><a class="resource" href="https://latentflip.com/loupe/" target="_blank" rel="noopener noreferrer">Open the Loupe visualizer ↗</a></p><ul class="slide__list slide__list--compact slide__list--center"><li>Paste the simple <code><span class="code__function">a</span></code> / <code><span class="code__function">b</span></code> example.</li><li>Watch calls enter and leave the stack.</li><li>Explain where the caller resumes.</li></ul>
+                    </div>
+                </section>
+
+				<section class="slide" data-topic="codewars" data-notes="These are the six links in the official session plan. Its Longest word link points to the Squash the bugs kata, so the slide preserves the destination and names both. Start with Unfinished loop or Is this my tail; then try Add property to every object. Who’s Online is a stretch exercise. Use for loops; do not introduce forEach, map, filter, or reduce. Allow roughly 25–30 minutes.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">CodeWars practice</h2>
+                        <ul class="slide__list slide__list--compact slide__list--center"><li><a class="resource" href="https://www.codewars.com/kata/add-property-to-every-object-in-array/train/javascript" target="_blank" rel="noopener noreferrer">Add property to every object</a></li><li><a class="resource" href="https://www.codewars.com/kata/colour-association/train/javascript" target="_blank" rel="noopener noreferrer">Color Association</a></li><li><a class="resource" href="https://www.codewars.com/kata/unfinished-loop-bug-fixing-number-1/train/javascript" target="_blank" rel="noopener noreferrer">Unfinished loop</a></li><li><a class="resource" href="https://www.codewars.com/kata/is-this-my-tail/train/javascript" target="_blank" rel="noopener noreferrer">Is this my tail?</a></li><li><a class="resource" href="https://www.codewars.com/kata/squash-the-bugs/train/javascript" target="_blank" rel="noopener noreferrer">Longest word / Squash the bugs</a></li><li><a class="resource" href="https://www.codewars.com/kata/whos-online/train/javascript" target="_blank" rel="noopener noreferrer">Who’s Online</a></li></ul>
+                    </div>
+                </section>
+
+				<section class="slide slide--center" data-topic="thank-you" data-notes="Close by asking each trainee to name one concept they can now explain and one thing they want to practise. Keyboard shortcuts remain the same as in the earlier decks: arrows/Space, N for notes, F for fullscreen, Home and End.">
+                    <div class="slide__inner">
+                        <h2 class="slide__title slide__title--medium">Keep<br /><span class="accent">experimenting.</span></h2>
+                    </div>
+                </section>
+			</main>
+
+			<nav class="controls" aria-label="Presentation controls">
+				<div class="controls__group">
+					<button class="button" id="previous" type="button" aria-label="Previous slide">←</button>
+					<button class="button" id="next" type="button" aria-label="Next slide">→</button>
+				</div>
+				<output class="counter" id="counter" aria-live="polite">1 / 1</output>
+				<div class="controls__group controls__group--end">
+					<button class="button" id="notes" type="button">Notes</button>
+					<button class="button" id="fullscreen" type="button">Fullscreen</button>
+				</div>
+			</nav>
+		</div>
+
+		<div class="progress" aria-hidden="true"><span class="progress__bar" id="progress"></span></div>
+		<dialog class="dialog" id="notes-dialog">
+			<header class="dialog__header">
+				<h2 class="dialog__title">Presenter notes</h2>
+				<button class="button" id="close-notes" type="button" aria-label="Close presenter notes">×</button>
+			</header>
+			<div class="dialog__body" id="notes-content"></div>
+		</dialog>
+
+		<script>
+			const shell = document.querySelector('.shell');
+			const slides = [...document.querySelectorAll('.slide')];
+			const previousButton = document.querySelector('#previous');
+			const nextButton = document.querySelector('#next');
+			const counter = document.querySelector('#counter');
+			const progress = document.querySelector('#progress');
+			const notesButton = document.querySelector('#notes');
+			const notesDialog = document.querySelector('#notes-dialog');
+			const notesContent = document.querySelector('#notes-content');
+			const closeNotesButton = document.querySelector('#close-notes');
+			const fullscreenButton = document.querySelector('#fullscreen');
+			let currentIndex = 0;
+
+			function requestedIndex() {
+				const value = Number.parseInt(window.location.hash.slice(1), 10);
+
+				return Number.isInteger(value) ? value - 1 : 0;
+			}
+
+			function showSlide(index, updateHash = true) {
+				currentIndex = Math.min(Math.max(index, 0), slides.length - 1);
+
+				shell.classList.toggle('shell--content', currentIndex > 0);
+
+				slides.forEach((slide, slideIndex) => {
+					const isActive = slideIndex === currentIndex;
+
+					slide.classList.toggle('slide--active', isActive);
+					slide.setAttribute('aria-hidden', String(!isActive));
+				});
+
+				counter.value = `${currentIndex + 1} / ${slides.length}`;
+				progress.style.width = `${((currentIndex + 1) / slides.length) * 100}%`;
+				previousButton.disabled = currentIndex === 0;
+				nextButton.disabled = currentIndex === slides.length - 1;
+
+				if (updateHash) {
+					history.replaceState(null, '', `#${currentIndex + 1}`);
+				}
+
+				document.title = `${currentIndex + 1}/${slides.length} · JavaScript Week 3`;
+			}
+
+			function move(amount) {
+				showSlide(currentIndex + amount);
+			}
+
+			function openNotes() {
+				notesContent.textContent =
+					slides[currentIndex].dataset.notes ??
+					'No additional notes for this slide. Invite trainees to predict, run, and explain.';
+				notesDialog.showModal();
+			}
+
+			previousButton.addEventListener('click', () => move(-1));
+			nextButton.addEventListener('click', () => move(1));
+			notesButton.addEventListener('click', openNotes);
+			closeNotesButton.addEventListener('click', () => notesDialog.close());
+			fullscreenButton.addEventListener('click', async () => {
+				if (document.fullscreenElement) {
+					await document.exitFullscreen();
+				} else {
+					await document.documentElement.requestFullscreen();
+				}
+			});
+
+			document.addEventListener('keydown', (event) => {
+				if (notesDialog.open) {
+					return;
+				}
+
+				if (['ArrowRight', 'PageDown', ' '].includes(event.key)) {
+					event.preventDefault();
+					move(1);
+				}
+
+				if (['ArrowLeft', 'PageUp'].includes(event.key)) {
+					event.preventDefault();
+					move(-1);
+				}
+
+				if (event.key === 'Home') showSlide(0);
+				if (event.key === 'End') showSlide(slides.length - 1);
+				if (event.key.toLowerCase() === 'n') openNotes();
+				if (event.key.toLowerCase() === 'f') fullscreenButton.click();
+			});
+
+			window.addEventListener('hashchange', () => {
+				showSlide(requestedIndex(), false);
+			});
+
+			showSlide(requestedIndex(), false);
+		</script>
+	</body>
+</html>
